@@ -1,0 +1,18 @@
+{
+    "server": {
+        "host": "localhost",
+        "port": 8081
+    },
+    "database": {
+        "driver": "sqlite3",
+        "path": "./database",
+        "fileName": "forum.db",
+        "schemesDir": "./database/schemes"
+    },
+    "role": {
+        "RoleGuest": -1,
+        "RoleUser": 0,
+        "RoleModerator": 1,
+        "RoleAdmin": 2
+    }
+}
