@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -44,4 +45,28 @@ func LoadConfig(name string) (*Config, error) {
 	}
 
 	return config, nil
+}
+
+func getDBConnString(database Database) string {
+	return fmt.Sprintf("%s%s", database.Path, database.Filename)
+}
+
+func (c *Config) GetProdDBConnString() string {
+	return getDBConnString(c.Database)
+}
+
+func (c *Config) GetDBDriver() string {
+	return c.Database.Driver
+}
+
+func (c *Config) GetDBSchemesDir() string {
+	return c.Database.SchemesDir
+}
+
+func (c *Config) GetDBFilename() string {
+	return c.Database.Filename
+}
+
+func (c *Config) GetDBPath() string {
+	return c.Database.Path
 }
