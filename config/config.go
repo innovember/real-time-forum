@@ -2,8 +2,8 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
+	"path/filepath"
 )
 
 type Database struct {
@@ -48,7 +48,7 @@ func LoadConfig(name string) (*Config, error) {
 }
 
 func getDBConnString(database Database) string {
-	return fmt.Sprintf("%s%s", database.Path, database.Filename)
+	return filepath.Join(database.Path, database.Filename)
 }
 
 func (c *Config) GetProdDBConnString() string {
