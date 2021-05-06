@@ -49,7 +49,8 @@ func (uh *UserHandler) HandlerRegisterUser(w http.ResponseWriter, r *http.Reques
 		if err != nil {
 			switch err {
 			case consts.ErrEmailNotValid, consts.ErrNicknameTooShort, consts.ErrNicknameTooLong,
-				consts.ErrNicknameAlreadyExist, consts.ErrEmailAlreadyExist:
+				consts.ErrNicknameAlreadyExist, consts.ErrEmailAlreadyExist,
+				consts.ErrHashPassword:
 				response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
 				return
 			default:

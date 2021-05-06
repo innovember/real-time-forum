@@ -36,6 +36,11 @@ func (uu *UserUsecase) Create(user *models.User) error {
 	if email != nil {
 		return consts.ErrEmailAlreadyExist
 	}
+	hashedPassword, err := helpers.Hash(user.Password)
+	if err != nil {
+		return consts.ErrHashPassword
+	}
+	user.Password = hashedPassword
 	if err = uu.userRepo.Insert(user); err != nil {
 		return err
 	}

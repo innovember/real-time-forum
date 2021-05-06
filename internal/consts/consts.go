@@ -19,4 +19,5 @@ var (
 	ErrPermissionDenied     = errors.New("в доступе отказано")
 	ErrOnlyPOST             = errors.New("разрешены только POST запросы")
 	ErrOnlyGet              = errors.New("разрешены только GET запросы")
+	ErrHashPassword         = errors.New("ошибка в хеширование пароля")
 )
