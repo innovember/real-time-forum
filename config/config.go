@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -20,12 +21,12 @@ type Database struct {
 
 type Server struct {
 	Host string `json:"host,omitempty"`
-	Port int    `json:"port,omitempty"`
+	Port string `json:"port,omitempty"`
 }
 
 type Config struct {
 	Database Database `json:"database"`
-	Server   Database `json:"server"`
+	Server   Server   `json:"server"`
 }
 
 func LoadConfig(name string) (*Config, error) {
@@ -69,4 +70,15 @@ func (c *Config) GetDBFilename() string {
 
 func (c *Config) GetDBPath() string {
 	return c.Database.Path
+}
+
+func (c *Config) GetPort() string {
+	return ":" + c.Server.Port
+}
+
+func (c *Config) GetHost() string {
+	return c.Server.Host
+}
+func (c *Config) GetLocalServerPath() string {
+	return fmt.Sprintf("%s:%s", c.GetHost(), c.GetPort())
 }
