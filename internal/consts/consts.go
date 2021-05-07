@@ -5,19 +5,19 @@ import (
 )
 
 var (
-	ErrInternal             = errors.New("внутренняя ошибка сервера") //Internal server error
-	ErrBadRequest           = errors.New("некорректный запрос")       //Bad request received
-	ErrEmailAlreadyExist    = errors.New("еmail уже существует")      //Email already exists
-	ErrEmailNotValid        = errors.New("еmail невалидный")
-	ErrNicknameAlreadyExist = errors.New("имя пользователя уже существует") //Nickname already exists
-	ErrNicknameTooShort     = errors.New("имя пользователя должно быть более 3 символов")
-	ErrNicknameTooLong      = errors.New("имя пользователя должно быть менее 15 символов")
-	ErrIncorrectNickname    = errors.New("неверный логин")   //Incorrect nickname
-	ErrIncorrectPassword    = errors.New("неверный  пароль") //Incorrect password
-	ErrNotAuthorized        = errors.New("не авторизован")   //Not authorized
-	ErrUserNotExist         = errors.New("пользователь не найден")
-	ErrPermissionDenied     = errors.New("в доступе отказано")
-	ErrOnlyPOST             = errors.New("разрешены только POST запросы")
-	ErrOnlyGet              = errors.New("разрешены только GET запросы")
-	ErrHashPassword         = errors.New("ошибка в хеширование пароля")
+	ErrInternal             = errors.New("internal server error") //Internal server error
+	ErrBadRequest           = errors.New("bad request")           //Bad request received
+	ErrEmailAlreadyExist    = errors.New("еmail already exist")   //Email already exists
+	ErrEmailNotValid        = errors.New("invalid email")
+	ErrNicknameAlreadyExist = errors.New("nickname already exist") //Nickname already exists
+	ErrNicknameTooShort     = errors.New("nickname too short, at least 3 char required")
+	ErrNicknameTooLong      = errors.New("nickname too long, at most 15 char required")
+	ErrIncorrectNickname    = errors.New("invalid login")    //Incorrect nickname
+	ErrIncorrectPassword    = errors.New("invalid password") //Incorrect password
+	ErrNotAuthorized        = errors.New("unauthorized")     //Not authorized
+	ErrUserNotExist         = errors.New("user not found")
+	ErrPermissionDenied     = errors.New("permission denied")
+	ErrOnlyPOST             = errors.New("only POST method allowed")
+	ErrOnlyGet              = errors.New("only GET method allowed")
+	ErrHashPassword         = errors.New("hash password error")
 )
