@@ -80,5 +80,5 @@ func (c *Config) GetHost() string {
 	return c.Server.Host
 }
 func (c *Config) GetLocalServerPath() string {
-	return fmt.Sprintf("%s:%s", c.GetHost(), c.GetPort())
+	return fmt.Sprintf("%s%s", c.GetHost(), c.GetPort())
 }
