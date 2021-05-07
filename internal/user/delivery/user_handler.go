@@ -23,11 +23,12 @@ func NewUserHandler(userUcase user.UserUsecase) *UserHandler {
 
 func (uh *UserHandler) Configure(mux *http.ServeMux, mm *mwares.MiddlewareManager) {
 	mux.HandleFunc("/api/v1/user/signup", mm.CORSConfig(uh.HandlerRegisterUser))
+	mux.HandleFunc("/api/v1/user/me", mm.CORSConfig(mm.CheckAuth(uh.HandlerCurrentUserInfo)))
 }
 
 func (uh *UserHandler) HandlerRegisterUser(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "POST":
+	case http.MethodPost:
 		var (
 			input models.InputUserSignUp
 			err   error
@@ -58,10 +59,38 @@ func (uh *UserHandler) HandlerRegisterUser(w http.ResponseWriter, r *http.Reques
 				return
 			}
 		}
-		response.JSON(w, true, http.StatusCreated, "new user has been created", nil)
+		response.JSON(w, true, http.StatusCreated, consts.RegistrationSuccess, nil)
 		return
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPOST.Error(), nil)
+		return
+	}
+}
+
+func (uh *UserHandler) HandlerCurrentUserInfo(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		var (
+			userID int64
+		)
+		if r.Context().Value(consts.ConstAuthedUserParam) != nil {
+			userID = r.Context().Value(consts.ConstAuthedUserParam).(int64)
+		}
+		user, err := uh.userUcase.GetByID(userID)
+		if err != nil {
+			switch err {
+			case consts.ErrNoData:
+				response.JSON(w, false, http.StatusUnauthorized, consts.ErrUserNotExist.Error(), nil)
+				return
+			default:
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
+		}
+		response.JSON(w, true, http.StatusOK, consts.ProfileSuccess, user)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
 		return
 	}
 }
