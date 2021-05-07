@@ -3,7 +3,7 @@ IF NOT EXISTS sessions
 (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL,
-    value TEXT UNIQUE NOT NULL,
+    token TEXT UNIQUE NOT NULL,
     expires_at INTEGER NOT NULL,
 
 FOREIGN KEY

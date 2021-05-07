@@ -1,8 +1,12 @@
 package consts
 
 import (
+	"database/sql"
 	"errors"
+	"time"
 )
+
+type ctxParam string
 
 var (
 	ErrInternal             = errors.New("внутренняя ошибка сервера") //Internal server error
@@ -20,4 +24,16 @@ var (
 	ErrOnlyPOST             = errors.New("разрешены только POST запросы")
 	ErrOnlyGet              = errors.New("разрешены только GET запросы")
 	ErrHashPassword         = errors.New("ошибка в хеширование пароля")
+	ErrCSRF                 = errors.New("invalid csrf token received")
+	ErrInvalidSessionToken  = errors.New("invalid session token received")
+	ErrSessionTokenNotFound = errors.New("invalid session token not found")
+	ErrNoData               = sql.ErrNoRows
+	RegistrationSuccess     = "You have registered successfully"
+	ProfileSuccess          = "User's profile fetched successfully"
+)
+
+const (
+	SessionName                    = "real_time_forum_session_id"
+	SessionExpireDuration          = 1 * time.Hour
+	ConstAuthedUserParam  ctxParam = "authorized_user"
 )
