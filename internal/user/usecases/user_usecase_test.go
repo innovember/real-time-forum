@@ -16,15 +16,16 @@ var (
 	err    error
 )
 
-func init() {
+func setup() *sql.DB {
 	dbConn, err = database.GetDBInstance("sqlite3", "../../../database/forum.db")
 	if err != nil {
 		log.Fatal("dbConn err: ", err)
 	}
+	return dbConn
 }
 
-func TestCreateUseCaseReturnsPass(t *testing.T) {
-	defer dbConn.Close()
+func TestCreateUser(t *testing.T) {
+	dbConn := setup()
 	user := models.User{
 		Nickname:  "erha",
 		Email:     "erha@gmail.com",
@@ -37,6 +38,19 @@ func TestCreateUseCaseReturnsPass(t *testing.T) {
 	userRepo := repository.NewUserDBRepository(dbConn)
 	userUCase := usecases.NewUserUsecase(userRepo)
 	if err := userUCase.Create(&user); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestCheckPassword(t *testing.T) {
+	dbConn := setup()
+	user := models.InputUserSignIn{
+		Nickname: "erha",
+		Password: "reactdev",
+	}
+	userRepo := repository.NewUserDBRepository(dbConn)
+	userUCase := usecases.NewUserUsecase(userRepo)
+	if err := userUCase.CheckPassword(&user); err != nil {
 		t.Error(err)
 	}
 }

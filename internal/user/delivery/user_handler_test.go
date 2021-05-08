@@ -29,9 +29,9 @@ func init() {
 }
 func TestRegisterHandler(t *testing.T) {
 	user := models.User{
-		Nickname:  "erha1",
-		Email:     "erha1@gmail.com",
-		Password:  "reactdev",
+		Nickname:  "newuser",
+		Email:     "newuser@gmail.com",
+		Password:  "qweasd123",
 		FirstName: "Erha",
 		LastName:  "D2",
 		Age:       20,
