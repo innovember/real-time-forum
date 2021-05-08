@@ -55,6 +55,14 @@ func (uu *UserUsecase) GetByNickname(nickname string) (*models.User, error) {
 	return user, nil
 }
 
+func (uu *UserUsecase) GetByEmail(email string) (*models.User, error) {
+	user, err := uu.userRepo.SelectByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (uu *UserUsecase) GetByID(userID int64) (*models.User, error) {
 	user, err := uu.userRepo.SelectByID(userID)
 	if err != nil {
@@ -80,4 +88,19 @@ func (uu *UserUsecase) CheckPassword(input *models.InputUserSignIn) error {
 		return consts.ErrIncorrectPassword
 	}
 	return nil
+}
+
+func (uu *UserUsecase) GetByEmailOrNickname(login string) (*models.User, error) {
+	name, err := uu.userRepo.SelectByNickname(login)
+	if err != nil {
+		return nil, err
+	}
+	if name != nil {
+		return name, nil
+	}
+	email, err := uu.userRepo.SelectByEmail(login)
+	if err != nil {
+		return nil, err
+	}
+	return email, nil
 }

@@ -34,9 +34,7 @@ func (sr *SessionDBRepository) Insert(session *models.Session) error {
 		session.UserID,
 		session.Token,
 		session.ExpiresAt.Unix()); err != nil {
-		if err = tx.Rollback(); err != nil {
-			return err
-		}
+		tx.Rollback()
 		return err
 	}
 	if _, err = result.LastInsertId(); err != nil {
@@ -60,9 +58,7 @@ func (sr *SessionDBRepository) Delete(token string) error {
 	}
 	if _, err = tx.Exec(`DELETE FROM sessions
 		WHERE token = ?`, token); err != nil {
-		if err = tx.Rollback(); err != nil {
-			return err
-		}
+		tx.Rollback()
 		return err
 	}
 	if err := tx.Commit(); err != nil {

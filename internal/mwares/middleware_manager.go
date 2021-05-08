@@ -37,12 +37,7 @@ func (mm *MiddlewareManager) isAllowedOrigin(origin string) bool {
 
 func (mm *MiddlewareManager) CORSConfig(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		origin := w.Header().Get("Origin")
-		allowOrigin := ""
-		if mm.isAllowedOrigin(origin) {
-			allowOrigin = origin
-		}
-		w.Header().Set("Access-Control-Allow-Origin", allowOrigin)
+		w.Header().Set("Access-Control-Allow-Origin", mm.origins[0])
 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-Csrf-Token")
 		w.Header().Set("Access-Control-Expose-Headers", "X-Csrf-Token")
@@ -72,12 +67,12 @@ func (mm *MiddlewareManager) CheckAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		_, err = mm.userUcase.GetByID(session.UserID)
+		user, err := mm.userUcase.GetByID(session.UserID)
 		if err != nil {
 			response.JSON(w, false, http.StatusUnauthorized, consts.ErrUserNotExist.Error(), nil)
 			return
 		}
-		ctx := context.WithValue(r.Context(), consts.ConstAuthedUserParam, session.UserID)
+		ctx := context.WithValue(r.Context(), consts.ConstAuthedUserParam, user.ID)
 		next(w, r.WithContext(ctx))
 	}
 }

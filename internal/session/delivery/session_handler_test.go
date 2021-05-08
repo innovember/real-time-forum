@@ -31,10 +31,7 @@ func init() {
 	}
 }
 func TestHandlerLogin(t *testing.T) {
-	var (
-		input models.InputUserSignIn
-	)
-	input = models.InputUserSignIn{
+	input := models.InputUserSignIn{
 		Nickname: "newuser",
 		Password: "qweasd123",
 	}
