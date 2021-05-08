@@ -38,14 +38,12 @@ func (sh *SessionHandler) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		var (
 			input models.InputUserSignIn
-			err   error
-			user  *models.User
 		)
-		if err = json.NewDecoder(r.Body).Decode(&input); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
 			return
 		}
-		user, err = sh.UserUcase.GetByNickname(input.Nickname)
+		user, err := sh.UserUcase.GetByEmailOrNickname(input.Nickname)
 		if err != nil {
 			switch err {
 			case consts.ErrNoData:

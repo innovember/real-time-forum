@@ -2,6 +2,7 @@ package mwares
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/innovember/real-time-forum/internal/consts"
@@ -39,6 +40,7 @@ func (mm *MiddlewareManager) CORSConfig(next http.HandlerFunc) http.HandlerFunc 
 	return func(w http.ResponseWriter, r *http.Request) {
 		origin := w.Header().Get("Origin")
 		allowOrigin := ""
+		log.Println(origin)
 		if mm.isAllowedOrigin(origin) {
 			allowOrigin = origin
 		}
@@ -72,12 +74,12 @@ func (mm *MiddlewareManager) CheckAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		_, err = mm.userUcase.GetByID(session.UserID)
+		user, err := mm.userUcase.GetByID(session.UserID)
 		if err != nil {
 			response.JSON(w, false, http.StatusUnauthorized, consts.ErrUserNotExist.Error(), nil)
 			return
 		}
-		ctx := context.WithValue(r.Context(), consts.ConstAuthedUserParam, session.UserID)
+		ctx := context.WithValue(r.Context(), consts.ConstAuthedUserParam, user.ID)
 		next(w, r.WithContext(ctx))
 	}
 }
