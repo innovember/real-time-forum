@@ -22,7 +22,7 @@ func NewCSRFToken(session *models.Session) (string, error) {
 
 	hashedSession := hex.EncodeToString(hasher.Sum(nil))
 
-	token := fmt.Sprintf("%s:%d", hashedSession, session.ExpiresAt.Unix())
+	token := fmt.Sprintf("%s:%d", hashedSession, session.ExpiresAt)
 	return token, nil
 }
 

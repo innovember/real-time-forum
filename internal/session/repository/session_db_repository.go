@@ -33,7 +33,7 @@ func (sr *SessionDBRepository) Insert(session *models.Session) error {
 								VALUES(?,?,?)`,
 		session.UserID,
 		session.Token,
-		session.ExpiresAt.Unix()); err != nil {
+		session.ExpiresAt); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -81,9 +81,7 @@ func (sr *SessionDBRepository) SelectByToken(token string) (*models.Session, err
 	if err = tx.QueryRow(`SELECT user_id, token, expires_at
 	FROM sessions
 	WHERE token = ?`, token).Scan(&session.UserID, &session.Token, &session.ExpiresAt); err != nil {
-		if err = tx.Rollback(); err != nil {
-			return nil, err
-		}
+		tx.Rollback()
 		return nil, err
 	}
 	if err := tx.Commit(); err != nil {

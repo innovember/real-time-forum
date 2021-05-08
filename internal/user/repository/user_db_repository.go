@@ -62,9 +62,7 @@ func (ur *UserDBRepository) SelectByEmail(email string) (*models.User, error) {
 						  FROM users
 						  WHERE email = ?
 	`, email).Scan(&u.ID, &u.Nickname, &u.Email, &u.Password); err != nil {
-		if err = tx.Rollback(); err != nil {
-			return nil, err
-		}
+		tx.Rollback()
 		return nil, err
 	}
 	if err = tx.Commit(); err != nil {
@@ -114,10 +112,8 @@ func (ur *UserDBRepository) SelectByID(userID int64) (*models.User, error) {
 						  WHERE id = ?
 	`, userID).Scan(&u.ID, &u.Nickname, &u.Email,
 		&u.FirstName, &u.LastName,
-		&u.CreatedAt, &u.LastActive); err != nil {
-		if err = tx.Rollback(); err != nil {
-			return nil, err
-		}
+		&u.Age, &u.Gender, &u.CreatedAt, &u.LastActive); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 	if err = tx.Commit(); err != nil {

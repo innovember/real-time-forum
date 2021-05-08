@@ -10,7 +10,7 @@ func BuildCookie(session *models.Session) *http.Cookie {
 	return &http.Cookie{
 		Value:    session.Token,
 		Name:     session.Name,
-		Expires:  session.ExpiresAt,
+		Expires:  session.Expires,
 		HttpOnly: true,
 		Path:     "/",
 		SameSite: http.SameSiteStrictMode,
