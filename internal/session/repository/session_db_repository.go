@@ -12,7 +12,7 @@ type SessionDBRepository struct {
 	dbConn *sql.DB
 }
 
-func NewSessionRep(dbConn *sql.DB) session.SessionRepository {
+func NewSessionDBRepository(dbConn *sql.DB) session.SessionRepository {
 	return &SessionDBRepository{
 		dbConn: dbConn,
 	}
@@ -33,7 +33,7 @@ func (sr *SessionDBRepository) Insert(session *models.Session) error {
 								VALUES(?,?,?)`,
 		session.UserID,
 		session.Token,
-		session.ExpiresAt); err != nil {
+		session.ExpiresAt.Unix()); err != nil {
 		if err = tx.Rollback(); err != nil {
 			return err
 		}
@@ -84,7 +84,7 @@ func (sr *SessionDBRepository) SelectByToken(token string) (*models.Session, err
 	}
 	if err = tx.QueryRow(`SELECT user_id, token, expires_at
 	FROM sessions
-	WHERE token = ?`, token).Scan(session.UserID, session.Token, session.ExpiresAt); err != nil {
+	WHERE token = ?`, token).Scan(session.UserID, session.Token, session.ExpiresAt.Unix()); err != nil {
 		if err = tx.Rollback(); err != nil {
 			return nil, err
 		}

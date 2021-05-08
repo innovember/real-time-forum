@@ -30,6 +30,8 @@ var (
 	ErrNoData               = sql.ErrNoRows
 	RegistrationSuccess     = "You have registered successfully"
 	ProfileSuccess          = "User's profile fetched successfully"
+	ErrOnlyDelete           = errors.New("only delete requests allowed")
+	LogoutSuccess           = "You have logged out"
 )
 
 const (

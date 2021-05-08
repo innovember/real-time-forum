@@ -33,7 +33,7 @@ func (ur *UserDBRepository) Insert(user *models.User) (err error) {
 				(?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`, user.Nickname, user.Email, user.Password,
 		user.FirstName, user.LastName, user.Age, user.Gender,
-		helpers.GetTime(), helpers.GetTime(),
+		helpers.GetCurrentUnixTime(), helpers.GetCurrentUnixTime(),
 	); err != nil {
 		if err = tx.Rollback(); err != nil {
 			return err
@@ -141,7 +141,7 @@ func (ur *UserDBRepository) UpdateActivity(userID int64) (err error) {
 	}
 	if _, err = tx.Exec(`UPDATE users
 						 SET last_active = ?
-						 WHERE id = ?`, helpers.GetTime(), userID); err != nil {
+						 WHERE id = ?`, helpers.GetCurrentUnixTime(), userID); err != nil {
 		if err = tx.Rollback(); err != nil {
 			return err
 		}

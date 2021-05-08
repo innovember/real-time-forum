@@ -2,6 +2,6 @@ package helpers
 
 import "time"
 
-func GetTime() int64 {
+func GetCurrentUnixTime() int64 {
 	return time.Now().Unix()
 }
