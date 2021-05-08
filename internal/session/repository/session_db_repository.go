@@ -80,7 +80,7 @@ func (sr *SessionDBRepository) SelectByToken(token string) (*models.Session, err
 	}
 	if err = tx.QueryRow(`SELECT user_id, token, expires_at
 	FROM sessions
-	WHERE token = ?`, token).Scan(session.UserID, session.Token, session.ExpiresAt.Unix()); err != nil {
+	WHERE token = ?`, token).Scan(&session.UserID, &session.Token, &session.ExpiresAt); err != nil {
 		if err = tx.Rollback(); err != nil {
 			return nil, err
 		}
