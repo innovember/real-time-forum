@@ -33,7 +33,7 @@ func (sr *SessionDBRepository) Insert(session *models.Session) error {
 								VALUES(?,?,?)`,
 		session.UserID,
 		session.Token,
-		session.ExpiresAt.Unix()); err != nil {
+		session.ExpiresAt); err != nil {
 		tx.Rollback()
 		return err
 	}
