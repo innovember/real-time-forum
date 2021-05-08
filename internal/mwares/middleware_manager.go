@@ -2,7 +2,6 @@ package mwares
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/innovember/real-time-forum/internal/consts"
@@ -38,13 +37,7 @@ func (mm *MiddlewareManager) isAllowedOrigin(origin string) bool {
 
 func (mm *MiddlewareManager) CORSConfig(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		origin := w.Header().Get("Origin")
-		allowOrigin := ""
-		log.Println(origin)
-		if mm.isAllowedOrigin(origin) {
-			allowOrigin = origin
-		}
-		w.Header().Set("Access-Control-Allow-Origin", allowOrigin)
+		w.Header().Set("Access-Control-Allow-Origin", mm.origins[0])
 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-Csrf-Token")
 		w.Header().Set("Access-Control-Expose-Headers", "X-Csrf-Token")

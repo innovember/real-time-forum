@@ -35,9 +35,7 @@ func (ur *UserDBRepository) Insert(user *models.User) (err error) {
 		user.FirstName, user.LastName, user.Age, user.Gender,
 		helpers.GetCurrentUnixTime(), helpers.GetCurrentUnixTime(),
 	); err != nil {
-		if err = tx.Rollback(); err != nil {
-			return err
-		}
+		tx.Rollback()
 		return err
 	}
 	if _, err = result.LastInsertId(); err != nil {
@@ -90,9 +88,7 @@ func (ur *UserDBRepository) SelectByNickname(nickname string) (*models.User, err
 						  FROM users
 						  WHERE nickname = ?
 	`, nickname).Scan(&u.ID, &u.Nickname, &u.Email, &u.Password); err != nil {
-		if err = tx.Rollback(); err != nil {
-			return nil, err
-		}
+		tx.Rollback()
 		return nil, err
 	}
 	if err = tx.Commit(); err != nil {
@@ -142,9 +138,7 @@ func (ur *UserDBRepository) UpdateActivity(userID int64) (err error) {
 	if _, err = tx.Exec(`UPDATE users
 						 SET last_active = ?
 						 WHERE id = ?`, helpers.GetCurrentUnixTime(), userID); err != nil {
-		if err = tx.Rollback(); err != nil {
-			return err
-		}
+		tx.Rollback()
 		return err
 	}
 	if err = tx.Commit(); err != nil {
