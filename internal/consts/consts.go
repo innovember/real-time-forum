@@ -1,8 +1,12 @@
 package consts
 
 import (
+	"database/sql"
 	"errors"
+	"time"
 )
+
+type ctxParam string
 
 var (
 	ErrInternal             = errors.New("internal server error") //Internal server error
@@ -20,4 +24,18 @@ var (
 	ErrOnlyPOST             = errors.New("only POST method allowed")
 	ErrOnlyGet              = errors.New("only GET method allowed")
 	ErrHashPassword         = errors.New("hash password error")
+	ErrCSRF                 = errors.New("invalid csrf token received")
+	ErrInvalidSessionToken  = errors.New("invalid session token received")
+	ErrSessionTokenNotFound = errors.New("invalid session token not found")
+	ErrNoData               = sql.ErrNoRows
+	RegistrationSuccess     = "You have registered successfully"
+	ProfileSuccess          = "User's profile fetched successfully"
+	ErrOnlyDelete           = errors.New("only delete requests allowed")
+	LogoutSuccess           = "You have logged out"
+)
+
+const (
+	SessionName                    = "real_time_forum_session_id"
+	SessionExpireDuration          = 1 * time.Hour
+	ConstAuthedUserParam  ctxParam = "authorized_user"
 )

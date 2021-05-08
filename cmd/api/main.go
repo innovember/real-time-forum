@@ -10,6 +10,10 @@ import (
 	userRepo "github.com/innovember/real-time-forum/internal/user/repository"
 	userUsecase "github.com/innovember/real-time-forum/internal/user/usecases"
 
+	sessionDelivery "github.com/innovember/real-time-forum/internal/session/delivery"
+	sessionRepo "github.com/innovember/real-time-forum/internal/session/repository"
+	sessionUsecase "github.com/innovember/real-time-forum/internal/session/usecases"
+
 	"github.com/innovember/real-time-forum/config"
 	"github.com/innovember/real-time-forum/pkg/database"
 )
@@ -38,13 +42,20 @@ func main() {
 	}
 
 	userRepository := userRepo.NewUserDBRepository(dbConn)
+	sessionRepository := sessionRepo.NewSessionDBRepository(dbConn)
+
 	userUsecase := userUsecase.NewUserUsecase(userRepository)
+	sessionUsecase := sessionUsecase.NewSessionUsecase(sessionRepository)
 
 	mux := http.NewServeMux()
-	mm := mwares.NewMiddlewareManager()
+	mm := mwares.NewMiddlewareManager(userUsecase, sessionUsecase)
 
 	userHandler := userDelivery.NewUserHandler(userUsecase)
 	userHandler.Configure(mux, mm)
+
+	sessionHandler := sessionDelivery.NewSessionHandler(sessionUsecase, userUsecase)
+	sessionHandler.Configure(mux, mm)
+
 	log.Println("Server is listening", config.GetLocalServerPath())
 	err = http.ListenAndServe(config.GetPort(), mux)
 	if err != nil {

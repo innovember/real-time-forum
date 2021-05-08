@@ -5,3 +5,5 @@ go-build:
 	go build -o ./build/api ./cmd/api/main.go
 run-build:
 	./build/api
+go-get:
+	go get -v all
