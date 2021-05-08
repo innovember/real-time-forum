@@ -32,7 +32,7 @@ func (sUc *SessionUsecase) DeleteSession(token string) error {
 }
 
 func (sUc *SessionUsecase) GetByToken(token string) (*models.Session, error) {
-	session, err := sUc.GetByToken(token)
+	session, err := sUc.sessionRepo.SelectByToken(token)
 	if err != nil {
 		return nil, err
 	}
