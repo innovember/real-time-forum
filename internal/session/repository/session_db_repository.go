@@ -111,3 +111,71 @@ func (sr *SessionDBRepository) DeleteTokens() error {
 	}
 	return nil
 }
+
+func (sr *SessionDBRepository) InsertOnlineUser(userID int64) error {
+	var (
+		ctx    context.Context
+		tx     *sql.Tx
+		result sql.Result
+		err    error
+	)
+	ctx = context.Background()
+	if tx, err = sr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return err
+	}
+	if result, err = tx.Exec(`INSERT INTO online_users(user_id,expires_at)
+								VALUES(?,?)`,
+		userID, helpers.GetSessionExpireTime()); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if _, err = result.LastInsertId(); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (sr *SessionDBRepository) DeleteOnlineUsers() error {
+	var (
+		ctx context.Context
+		tx  *sql.Tx
+		err error
+	)
+	ctx = context.Background()
+	if tx, err = sr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(`DELETE FROM online_users
+		WHERE expires_at < ?`, helpers.GetCurrentUnixTime()); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (sr *SessionDBRepository) DeleteOnlineUser(userID int64) error {
+	var (
+		ctx context.Context
+		tx  *sql.Tx
+		err error
+	)
+	ctx = context.Background()
+	if tx, err = sr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(`DELETE FROM online_users
+		WHERE user_id = ?`, userID); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}

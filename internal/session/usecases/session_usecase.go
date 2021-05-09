@@ -51,3 +51,29 @@ func (sUc *SessionUsecase) DeleteExpiredSessions() {
 		time.Sleep(5 * time.Second)
 	}
 }
+
+func (sUc *SessionUsecase) CreateOnlineUser(userID int64) error {
+	err := sUc.sessionRepo.InsertOnlineUser(userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (sUc *SessionUsecase) DeleteOnlineUser(userID int64) error {
+	err := sUc.sessionRepo.DeleteOnlineUser(userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (sUc *SessionUsecase) DeleteOnlineUsers() {
+	for {
+		err := sUc.sessionRepo.DeleteOnlineUsers()
+		if err != nil {
+			log.Println(err)
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
