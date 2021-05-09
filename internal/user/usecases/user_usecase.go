@@ -104,3 +104,19 @@ func (uu *UserUsecase) GetByEmailOrNickname(login string) (*models.User, error) 
 	}
 	return email, nil
 }
+
+func (uu *UserUsecase) GetAllUsers() ([]models.User, error) {
+	users, err := uu.userRepo.SelectAllUsers()
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (uu *UserUsecase) GetAllOnlineUsers() ([]models.User, error) {
+	users, err := uu.userRepo.SelectAllOnlineUsers()
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}

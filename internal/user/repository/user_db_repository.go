@@ -142,3 +142,94 @@ func (ur *UserDBRepository) UpdateActivity(userID int64) (err error) {
 	}
 	return nil
 }
+
+func (ur *UserDBRepository) SelectAllUsers() ([]models.User, error) {
+	var (
+		ctx   context.Context
+		tx    *sql.Tx
+		rows  *sql.Rows
+		users []models.User
+		err   error
+	)
+	ctx = context.Background()
+	if tx, err = ur.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return nil, err
+	}
+	if rows, err = tx.Query(`SELECT *
+							 FROM users
+		`); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var u models.User
+		err = rows.Scan(
+			&u.ID, &u.Nickname,
+			&u.Email, &u.FirstName,
+			&u.LastName, &u.Age,
+			&u.Gender, &u.CreatedAt,
+			&u.LastActive)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (ur *UserDBRepository) SelectAllOnlineUsers() ([]models.User, error) {
+	var (
+		ctx   context.Context
+		tx    *sql.Tx
+		rows  *sql.Rows
+		users []models.User
+		err   error
+	)
+	ctx = context.Background()
+	if tx, err = ur.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return nil, err
+	}
+	if rows, err = tx.Query(`
+						SELECT id, nickname, email,
+						first_name, last_name,
+						age, gender,created_at, last_active
+						FROM users
+						WHERE id IN (
+                        SELECT user_id
+                        FROM online_users
+                        )
+		`); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var u models.User
+		err = rows.Scan(
+			&u.ID, &u.Nickname,
+			&u.Email, &u.FirstName,
+			&u.LastName, &u.Age,
+			&u.Gender, &u.CreatedAt,
+			&u.LastActive)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+	return users, nil
+}

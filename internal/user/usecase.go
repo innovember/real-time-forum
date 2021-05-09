@@ -10,4 +10,6 @@ type UserUsecase interface {
 	UpdateActivity(userID int64) error
 	CheckPassword(*models.InputUserSignIn) error
 	GetByEmailOrNickname(login string) (*models.User, error)
+	GetAllUsers() ([]models.User, error)
+	GetAllOnlineUsers() ([]models.User, error)
 }

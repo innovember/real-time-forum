@@ -24,6 +24,8 @@ func NewUserHandler(userUcase user.UserUsecase) *UserHandler {
 func (uh *UserHandler) Configure(mux *http.ServeMux, mm *mwares.MiddlewareManager) {
 	mux.HandleFunc("/api/v1/user/signup", mm.CORSConfig(uh.HandlerRegisterUser))
 	mux.HandleFunc("/api/v1/user/me", mm.CORSConfig(mm.CheckAuth(uh.HandlerCurrentUserInfo)))
+	mux.HandleFunc("/api/v1/users", mm.CORSConfig(mm.CheckAuth(uh.HandlerCurrentUsersInfo)))
+	mux.HandleFunc("/api/v1/users/online", mm.CORSConfig(mm.CheckAuth(uh.HandlerCurrentOnlineUsersInfo)))
 }
 
 func (uh *UserHandler) HandlerRegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -88,6 +90,50 @@ func (uh *UserHandler) HandlerCurrentUserInfo(w http.ResponseWriter, r *http.Req
 			}
 		}
 		response.JSON(w, true, http.StatusOK, consts.ProfileSuccess, user)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
+		return
+	}
+}
+
+func (uh *UserHandler) HandlerCurrentUsersInfo(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		users, err := uh.userUcase.GetAllUsers()
+		if err != nil {
+			switch err {
+			case consts.ErrNoData:
+				response.JSON(w, false, http.StatusUnauthorized, consts.ErrUserNotExist.Error(), nil)
+				return
+			default:
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
+		}
+		response.JSON(w, true, http.StatusOK, consts.AllUsers, users)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
+		return
+	}
+}
+
+func (uh *UserHandler) HandlerCurrentOnlineUsersInfo(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		users, err := uh.userUcase.GetAllOnlineUsers()
+		if err != nil {
+			switch err {
+			case consts.ErrNoData:
+				response.JSON(w, false, http.StatusUnauthorized, consts.ErrUserNotExist.Error(), nil)
+				return
+			default:
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
+		}
+		response.JSON(w, true, http.StatusOK, consts.AllOnlineUsers, users)
 		return
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
