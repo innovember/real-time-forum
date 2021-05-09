@@ -1,6 +1,9 @@
 package usecases
 
 import (
+	"log"
+	"time"
+
 	"github.com/innovember/real-time-forum/internal/models"
 	"github.com/innovember/real-time-forum/internal/session"
 )
@@ -37,4 +40,14 @@ func (sUc *SessionUsecase) GetByToken(token string) (*models.Session, error) {
 		return nil, err
 	}
 	return session, nil
+}
+
+func (sUc *SessionUsecase) DeleteExpiredSessions() {
+	for {
+		err := sUc.sessionRepo.DeleteTokens()
+		if err != nil {
+			log.Println(err)
+		}
+		time.Sleep(5 * time.Second)
+	}
 }

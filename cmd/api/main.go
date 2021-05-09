@@ -46,7 +46,7 @@ func main() {
 
 	userUsecase := userUsecase.NewUserUsecase(userRepository)
 	sessionUsecase := sessionUsecase.NewSessionUsecase(sessionRepository)
-
+	go sessionUsecase.DeleteExpiredSessions()
 	mux := http.NewServeMux()
 	mm := mwares.NewMiddlewareManager(userUsecase, sessionUsecase)
 

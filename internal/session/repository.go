@@ -8,4 +8,5 @@ type SessionRepository interface {
 	SelectByToken(token string) (*models.Session, error)
 	Insert(*models.Session) error
 	Delete(token string) error
+	DeleteTokens() error
 }
