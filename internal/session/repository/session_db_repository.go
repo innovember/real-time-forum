@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/innovember/real-time-forum/internal/helpers"
 	"github.com/innovember/real-time-forum/internal/models"
 	"github.com/innovember/real-time-forum/internal/session"
 )
@@ -88,4 +89,25 @@ func (sr *SessionDBRepository) SelectByToken(token string) (*models.Session, err
 		return nil, err
 	}
 	return session, nil
+}
+
+func (sr *SessionDBRepository) DeleteTokens() error {
+	var (
+		ctx context.Context
+		tx  *sql.Tx
+		err error
+	)
+	ctx = context.Background()
+	if tx, err = sr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(`DELETE FROM sessions
+		WHERE expires_at < ?`, helpers.GetCurrentUnixTime()); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return nil
 }

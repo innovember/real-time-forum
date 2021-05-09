@@ -6,4 +6,5 @@ type SessionUsecase interface {
 	CreateSession(session *models.Session) error
 	GetByToken(token string) (*models.Session, error)
 	DeleteSession(token string) error
+	DeleteExpiredSessions()
 }
