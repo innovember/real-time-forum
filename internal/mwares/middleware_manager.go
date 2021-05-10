@@ -72,6 +72,10 @@ func (mm *MiddlewareManager) CheckAuth(next http.HandlerFunc) http.HandlerFunc {
 			response.JSON(w, false, http.StatusUnauthorized, consts.ErrUserNotExist.Error(), nil)
 			return
 		}
+		if err = mm.userUcase.UpdateActivity(user.ID); err != nil {
+			response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
 		ctx := context.WithValue(r.Context(), consts.ConstAuthedUserParam, user.ID)
 		next(w, r.WithContext(ctx))
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/innovember/real-time-forum/internal/consts"
 	"github.com/innovember/real-time-forum/internal/helpers"
 	"github.com/innovember/real-time-forum/internal/models"
 	"github.com/innovember/real-time-forum/internal/session"
@@ -93,13 +94,43 @@ func (sr *SessionDBRepository) SelectByToken(token string) (*models.Session, err
 
 func (sr *SessionDBRepository) DeleteTokens() error {
 	var (
-		ctx context.Context
-		tx  *sql.Tx
-		err error
+		ctx   context.Context
+		tx    *sql.Tx
+		rows  *sql.Rows
+		users []int64
+		err   error
 	)
 	ctx = context.Background()
 	if tx, err = sr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
 		return err
+	}
+	if rows, err = tx.Query(`SELECT user_id
+							 FROM sessions
+							 WHERE expires_at < ?
+		`, helpers.GetCurrentUnixTime()); err != nil {
+		tx.Rollback()
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var u int64
+		err = rows.Scan(
+			&u)
+		if err != nil {
+			return err
+		}
+		users = append(users, u)
+	}
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+	for _, id := range users {
+		err = sr.UpdateStatus(id, consts.StatusOffline)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
 	if _, err = tx.Exec(`DELETE FROM sessions
 		WHERE expires_at < ?`, helpers.GetCurrentUnixTime()); err != nil {
@@ -107,6 +138,27 @@ func (sr *SessionDBRepository) DeleteTokens() error {
 		return err
 	}
 	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (sr *SessionDBRepository) UpdateStatus(userID int64, status string) (err error) {
+	var (
+		ctx context.Context
+		tx  *sql.Tx
+	)
+	ctx = context.Background()
+	if tx, err = sr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(`UPDATE users
+						 SET status = ?
+						 WHERE id = ?`, status, userID); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err = tx.Commit(); err != nil {
 		return err
 	}
 	return nil

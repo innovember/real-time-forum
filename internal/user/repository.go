@@ -8,4 +8,5 @@ type UserRepository interface {
 	SelectByNickname(username string) (*models.User, error)
 	SelectByID(userID int64) (*models.User, error)
 	UpdateActivity(userID int64) (err error)
+	SelectAllUsers() ([]models.User, error)
 }

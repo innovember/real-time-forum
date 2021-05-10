@@ -3,6 +3,7 @@ package delivery
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/innovember/real-time-forum/internal/consts"
 	"github.com/innovember/real-time-forum/internal/models"
@@ -23,7 +24,9 @@ func NewUserHandler(userUcase user.UserUsecase) *UserHandler {
 
 func (uh *UserHandler) Configure(mux *http.ServeMux, mm *mwares.MiddlewareManager) {
 	mux.HandleFunc("/api/v1/user/signup", mm.CORSConfig(uh.HandlerRegisterUser))
-	mux.HandleFunc("/api/v1/user/me", mm.CORSConfig(mm.CheckAuth(uh.HandlerCurrentUserInfo)))
+	mux.HandleFunc("/api/v1/users/me", mm.CORSConfig(mm.CheckAuth(uh.HandlerCurrentUserInfo)))
+	mux.HandleFunc("/api/v1/users", mm.CORSConfig(uh.HandlerCurrentUsersInfo))
+	mux.HandleFunc("/api/v1/users/", mm.CORSConfig(uh.HandlerGetUserInfo))
 }
 
 func (uh *UserHandler) HandlerRegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -45,6 +48,7 @@ func (uh *UserHandler) HandlerRegisterUser(w http.ResponseWriter, r *http.Reques
 			LastName:  input.LastName,
 			Age:       input.Age,
 			Gender:    input.Gender,
+			Status:    consts.StatusOffline,
 		}
 		err = uh.userUcase.Create(&user)
 		if err != nil {
@@ -88,6 +92,56 @@ func (uh *UserHandler) HandlerCurrentUserInfo(w http.ResponseWriter, r *http.Req
 			}
 		}
 		response.JSON(w, true, http.StatusOK, consts.ProfileSuccess, user)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
+		return
+	}
+}
+
+func (uh *UserHandler) HandlerCurrentUsersInfo(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		users, err := uh.userUcase.GetAllUsers()
+		if err != nil {
+			switch err {
+			case consts.ErrNoData:
+				response.JSON(w, false, http.StatusUnauthorized, consts.ErrUserNotExist.Error(), nil)
+				return
+			default:
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
+		}
+		response.JSON(w, true, http.StatusOK, consts.AllUsers, users)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
+		return
+	}
+}
+
+func (uh *UserHandler) HandlerGetUserInfo(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		_id := r.URL.Path[len("/api/v1/users/"):]
+		userID, err := strconv.Atoi(_id)
+		if err != nil {
+			response.JSON(w, false, http.StatusBadRequest, consts.ErrUserNotExist.Error(), nil)
+			return
+		}
+		user, err := uh.userUcase.GetByID(int64(userID))
+		if err != nil {
+			switch err {
+			case consts.ErrNoData:
+				response.JSON(w, false, http.StatusUnauthorized, consts.ErrUserNotExist.Error(), nil)
+				return
+			default:
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
+		}
+		response.JSON(w, true, http.StatusOK, consts.AllUsers, user)
 		return
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)

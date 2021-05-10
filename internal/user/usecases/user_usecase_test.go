@@ -34,6 +34,7 @@ func TestCreateUser(t *testing.T) {
 		LastName:  "D2",
 		Age:       20,
 		Gender:    "male",
+		Status:    "offline",
 	}
 	userRepo := repository.NewUserDBRepository(dbConn)
 	userUCase := usecases.NewUserUsecase(userRepo)

@@ -51,3 +51,11 @@ func (sUc *SessionUsecase) DeleteExpiredSessions() {
 		time.Sleep(5 * time.Second)
 	}
 }
+
+func (sUc *SessionUsecase) UpdateStatus(userID int64, status string) error {
+	err := sUc.sessionRepo.UpdateStatus(userID, status)
+	if err != nil {
+		return err
+	}
+	return nil
+}

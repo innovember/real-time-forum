@@ -45,3 +45,13 @@ func TestGetByToken(t *testing.T) {
 		t.Error("user not found")
 	}
 }
+
+func TestUpdateStatus(t *testing.T) {
+	dbConn := setup()
+	sessionRepository := sessionRepo.NewSessionDBRepository(dbConn)
+	sessionUsecase := usecases.NewSessionUsecase(sessionRepository)
+	err := sessionUsecase.UpdateStatus(1, "online")
+	if err != nil {
+		t.Error("update status err ", err)
+	}
+}

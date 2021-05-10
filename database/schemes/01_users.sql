@@ -10,5 +10,6 @@ IF NOT EXISTS users
   age INTEGER NOT NULL,
   gender INTEGER NOT NULL,
   created_at INTEGER NOT NULL,
-  last_active INTEGER NOT NULL
+  last_active INTEGER NOT NULL,
+  status TEXT NOT NULL
 );

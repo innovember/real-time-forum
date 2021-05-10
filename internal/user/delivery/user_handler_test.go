@@ -36,6 +36,7 @@ func TestRegisterHandler(t *testing.T) {
 		LastName:  "D2",
 		Age:       20,
 		Gender:    "male",
+		Status:    "offline",
 	}
 	body, err := json.Marshal(user)
 	if err != nil {

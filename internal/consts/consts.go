@@ -32,6 +32,10 @@ var (
 	ProfileSuccess          = "User's profile fetched successfully"
 	ErrOnlyDelete           = errors.New("only delete requests allowed")
 	LogoutSuccess           = "You have logged out"
+	AllUsers                = "list of all users"
+	AllOnlineUsers          = "list of all online users"
+	StatusOnline            = "online"
+	StatusOffline           = "offline"
 )
 
 const (

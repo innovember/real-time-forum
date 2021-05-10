@@ -71,6 +71,10 @@ func (sh *SessionHandler) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		cookie := cookie.BuildCookie(session)
 		w.Header().Set("Set-Cookie", cookie.String())
 		w.Header().Set("X-CSRF-TOKEN", token)
+		if err = sh.SessionUcase.UpdateStatus(session.UserID, consts.StatusOnline); err != nil {
+			response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
 		response.JSON(w, true, http.StatusOK, "", user)
 		return
 	default:
@@ -96,6 +100,10 @@ func (sh *SessionHandler) HandlerLogout(w http.ResponseWriter, r *http.Request) 
 		cookie.Path = "/"
 		cookie.Expires = time.Now().AddDate(0, 0, -2)
 		w.Header().Set("Set-Cookie", cookie.String())
+		if err = sh.SessionUcase.UpdateStatus(session.UserID, consts.StatusOffline); err != nil {
+			response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
 		response.JSON(w, true, http.StatusOK, consts.LogoutSuccess, nil)
 		return
 	default:
