@@ -1,12 +1,12 @@
 package models
 
 type InputUserSignIn struct {
-	Nickname string `json:"nickname"` // username or email
+	Nickname string `json:"usernameOrEmail"` // username or email
 	Password string `json:"password"`
 }
 
 type InputUserSignUp struct {
-	Nickname  string `json:"nickname"`
+	Nickname  string `json:"username"`
 	Password  string `json:"password"`
 	Email     string `json:"email"`
 	FirstName string `json:"firstName"`
