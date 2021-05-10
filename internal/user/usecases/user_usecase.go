@@ -80,7 +80,7 @@ func (uu *UserUsecase) UpdateActivity(userID int64) error {
 }
 
 func (uu *UserUsecase) CheckPassword(input *models.InputUserSignIn) error {
-	user, err := uu.userRepo.SelectByNickname(input.Nickname)
+	user, err := uu.GetByEmailOrNickname(input.Nickname)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (uu *UserUsecase) CheckPassword(input *models.InputUserSignIn) error {
 
 func (uu *UserUsecase) GetByEmailOrNickname(login string) (*models.User, error) {
 	name, err := uu.userRepo.SelectByNickname(login)
-	if err != nil {
+	if err != consts.ErrNoData {
 		return nil, err
 	}
 	if name != nil {
@@ -101,6 +101,9 @@ func (uu *UserUsecase) GetByEmailOrNickname(login string) (*models.User, error) 
 	email, err := uu.userRepo.SelectByEmail(login)
 	if err != nil {
 		return nil, err
+	}
+	if email == nil {
+		return nil, consts.ErrUserNotExist
 	}
 	return email, nil
 }
