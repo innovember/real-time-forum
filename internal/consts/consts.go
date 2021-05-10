@@ -34,6 +34,8 @@ var (
 	LogoutSuccess           = "You have logged out"
 	AllUsers                = "list of all users"
 	AllOnlineUsers          = "list of all online users"
+	StatusOnline            = "online"
+	StatusOffline           = "offline"
 )
 
 const (
