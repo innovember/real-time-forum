@@ -10,9 +10,5 @@ type SessionRepository interface {
 	Insert(*models.Session) error
 	Delete(token string) error
 	DeleteTokens() error
-
-	// Online Users
-	InsertOnlineUser(userID int64) error
-	DeleteOnlineUser(userID int64) error
-	DeleteOnlineUsers() error
+	UpdateStatus(userID int64, status string) error
 }

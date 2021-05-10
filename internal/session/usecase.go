@@ -7,9 +7,5 @@ type SessionUsecase interface {
 	GetByToken(token string) (*models.Session, error)
 	DeleteSession(token string) error
 	DeleteExpiredSessions()
-
-	// Online Users
-	CreateOnlineUser(userID int64) error
-	DeleteOnlineUser(userID int64) error
-	DeleteOnlineUsers()
+	UpdateStatus(userID int64, status string) error
 }

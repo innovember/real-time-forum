@@ -46,13 +46,12 @@ func TestGetByToken(t *testing.T) {
 	}
 }
 
-func TestCreateOnlineUser(t *testing.T) {
+func TestUpdateStatus(t *testing.T) {
 	dbConn := setup()
 	sessionRepository := sessionRepo.NewSessionDBRepository(dbConn)
 	sessionUsecase := usecases.NewSessionUsecase(sessionRepository)
-
-	err := sessionUsecase.CreateOnlineUser(1)
+	err := sessionUsecase.UpdateStatus(1, "online")
 	if err != nil {
-		t.Error("online user err ", err)
+		t.Error("update status err ", err)
 	}
 }
