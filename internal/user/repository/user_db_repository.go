@@ -28,12 +28,13 @@ func (ur *UserDBRepository) Insert(user *models.User) (err error) {
 		return err
 	}
 	if result, err = tx.Exec(`INSERT INTO users
-				(nickname,email, password, first_name, last_name, age, gender,created_at, last_active)
+				(nickname,email, password, first_name, last_name, age, gender,created_at, last_active,status)
 			VALUES
-				(?, ?, ?, ?, ?, ?, ?, ?, ?)
+				(?, ?, ?, ?, ?, ?, ?, ?, ?,?)
 		`, user.Nickname, user.Email, user.Password,
 		user.FirstName, user.LastName, user.Age, user.Gender,
 		helpers.GetCurrentUnixTime(), helpers.GetCurrentUnixTime(),
+		user.Status,
 	); err != nil {
 		tx.Rollback()
 		return err
@@ -107,12 +108,12 @@ func (ur *UserDBRepository) SelectByID(userID int64) (*models.User, error) {
 		return nil, err
 	}
 	if err = tx.QueryRow(`SELECT id, nickname, email, first_name, last_name,
-							age, gender,created_at, last_active
+							age, gender,created_at, last_active,status
 						  FROM users
 						  WHERE id = ?
 	`, userID).Scan(&u.ID, &u.Nickname, &u.Email,
 		&u.FirstName, &u.LastName,
-		&u.Age, &u.Gender, &u.CreatedAt, &u.LastActive); err != nil {
+		&u.Age, &u.Gender, &u.CreatedAt, &u.LastActive, &u.Status); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -155,7 +156,8 @@ func (ur *UserDBRepository) SelectAllUsers() ([]models.User, error) {
 	if tx, err = ur.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
 		return nil, err
 	}
-	if rows, err = tx.Query(`SELECT *
+	if rows, err = tx.Query(`SELECT id, nickname, email, first_name, last_name,
+							age, gender,created_at, last_active,status
 							 FROM users
 		`); err != nil {
 		tx.Rollback()
@@ -169,56 +171,8 @@ func (ur *UserDBRepository) SelectAllUsers() ([]models.User, error) {
 			&u.Email, &u.FirstName,
 			&u.LastName, &u.Age,
 			&u.Gender, &u.CreatedAt,
-			&u.LastActive)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, u)
-	}
-	err = rows.Err()
-	if err != nil {
-		return nil, err
-	}
-	if err = tx.Commit(); err != nil {
-		return nil, err
-	}
-	return users, nil
-}
-
-func (ur *UserDBRepository) SelectAllOnlineUsers() ([]models.User, error) {
-	var (
-		ctx   context.Context
-		tx    *sql.Tx
-		rows  *sql.Rows
-		users []models.User
-		err   error
-	)
-	ctx = context.Background()
-	if tx, err = ur.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
-		return nil, err
-	}
-	if rows, err = tx.Query(`
-						SELECT id, nickname, email,
-						first_name, last_name,
-						age, gender,created_at, last_active
-						FROM users
-						WHERE id IN (
-                        SELECT user_id
-                        FROM online_users
-                        )
-		`); err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var u models.User
-		err = rows.Scan(
-			&u.ID, &u.Nickname,
-			&u.Email, &u.FirstName,
-			&u.LastName, &u.Age,
-			&u.Gender, &u.CreatedAt,
-			&u.LastActive)
+			&u.LastActive,
+			&u.Status)
 		if err != nil {
 			return nil, err
 		}

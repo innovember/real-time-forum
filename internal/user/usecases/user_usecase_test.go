@@ -2,7 +2,6 @@ package usecases_test
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"testing"
 
@@ -35,6 +34,7 @@ func TestCreateUser(t *testing.T) {
 		LastName:  "D2",
 		Age:       20,
 		Gender:    "male",
+		Status:    "offline",
 	}
 	userRepo := repository.NewUserDBRepository(dbConn)
 	userUCase := usecases.NewUserUsecase(userRepo)
@@ -52,17 +52,6 @@ func TestCheckPassword(t *testing.T) {
 	userRepo := repository.NewUserDBRepository(dbConn)
 	userUCase := usecases.NewUserUsecase(userRepo)
 	if err := userUCase.CheckPassword(&user); err != nil {
-		t.Error(err)
-	}
-}
-
-func TestGetAllOnlineUsers(t *testing.T) {
-	dbConn := setup()
-	userRepo := repository.NewUserDBRepository(dbConn)
-	userUCase := usecases.NewUserUsecase(userRepo)
-	users, err := userUCase.GetAllOnlineUsers()
-	fmt.Println(users)
-	if err != nil {
 		t.Error(err)
 	}
 }
