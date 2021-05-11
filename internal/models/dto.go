@@ -14,3 +14,9 @@ type InputUserSignUp struct {
 	Age       int    `json:"age"`
 	Gender    string `json:"gender"`
 }
+
+type InputPost struct {
+	Title      string   `json:"title"`
+	Content    string   `json:"content"`
+	Categories []string `json:"categories"`
+}
