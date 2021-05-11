@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS posts (
+	id INTEGER PRIMARY KEY,
+	author_id INTEGER NOT NULL,
+	title TEXT NOT NULL,
+	content TEXT NOT NULL,
+	created_at INTEGER NOT NULL,
+	FOREIGN KEY (author_id) REFERENCES users (id) ON
+DELETE CASCADE
+);
