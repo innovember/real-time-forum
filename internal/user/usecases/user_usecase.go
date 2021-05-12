@@ -92,14 +92,14 @@ func (uu *UserUsecase) CheckPassword(input *models.InputUserSignIn) error {
 
 func (uu *UserUsecase) GetByEmailOrNickname(login string) (*models.User, error) {
 	name, err := uu.userRepo.SelectByNickname(login)
-	if err != consts.ErrNoData {
+	if err != nil && err != consts.ErrNoData {
 		return nil, err
 	}
 	if name != nil {
 		return name, nil
 	}
 	email, err := uu.userRepo.SelectByEmail(login)
-	if err != nil {
+	if err != nil && err != consts.ErrNoData {
 		return nil, err
 	}
 	if email == nil {
