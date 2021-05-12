@@ -57,7 +57,7 @@ func main() {
 	sessionRepository := sessionRepo.NewSessionDBRepository(dbConn)
 	categoryRepository := categoryRepo.NewCategoryDBRepository(dbConn)
 	postRepository := postRepo.NewPostDBRepository(dbConn, userRepository)
-	commentRepository := commentRepo.NewCommentDBRepository(dbConn)
+	commentRepository := commentRepo.NewCommentDBRepository(dbConn, userRepository)
 
 	userUsecase := userUsecase.NewUserUsecase(userRepository)
 	sessionUsecase := sessionUsecase.NewSessionUsecase(sessionRepository)
