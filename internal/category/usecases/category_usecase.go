@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"github.com/innovember/real-time-forum/internal/category"
+	"github.com/innovember/real-time-forum/internal/models"
 )
 
 type CategoryUsecase struct {
@@ -12,4 +13,11 @@ func NewCategoryUsecase(categoryRepo category.CategoryRepository) *CategoryUseca
 	return &CategoryUsecase{
 		categoryRepo: categoryRepo,
 	}
+}
+
+func (cu *CategoryUsecase) GetAllCategories() (categories []models.Category, err error) {
+	if categories, err = cu.categoryRepo.SelectAllCategories(); err != nil {
+		return nil, err
+	}
+	return categories, nil
 }
