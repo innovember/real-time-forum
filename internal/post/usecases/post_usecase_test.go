@@ -5,6 +5,7 @@ import (
 	"log"
 	"testing"
 
+	categoryRepo "github.com/innovember/real-time-forum/internal/category/repository"
 	"github.com/innovember/real-time-forum/internal/models"
 	"github.com/innovember/real-time-forum/internal/post/repository"
 	"github.com/innovember/real-time-forum/internal/post/usecases"
@@ -25,18 +26,19 @@ func setup() *sql.DB {
 	return dbConn
 }
 
-func TestCreateUser(t *testing.T) {
+func TestCreatePost(t *testing.T) {
 	dbConn := setup()
 	post := models.Post{
-		AuthorID:   1,
-		Title:      "smth new",
-		Content:    "some random text",
-		Categories: []string{"new", "random"},
+		AuthorID: 1,
+		Title:    "smth new",
+		Content:  "some random text",
 	}
+	categories := []string{"new", "random"}
 	userRepo := userRepo.NewUserDBRepository(dbConn)
+	categoryRepository := categoryRepo.NewCategoryDBRepository(dbConn)
 	postRepo := repository.NewPostDBRepository(dbConn, userRepo)
-	postUCase := usecases.NewPostUsecase(postRepo, categoryRepo)
-	if err := postUCase.Create(&post); err != nil {
+	postUCase := usecases.NewPostUsecase(postRepo, categoryRepository)
+	if err := postUCase.Create(&post, categories); err != nil {
 		t.Error(err)
 	}
 }

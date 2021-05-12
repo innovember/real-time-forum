@@ -37,6 +37,7 @@ var (
 	StatusOnline            = "online"
 	StatusOffline           = "offline"
 	PostCreated             = "Your post has been created"
+	AllCategories           = "List of all categories"
 )
 
 const (

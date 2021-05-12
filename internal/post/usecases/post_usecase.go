@@ -24,9 +24,9 @@ func (pu *PostUsecase) Create(post *models.Post, categories []string) error {
 	if err != nil {
 		return err
 	}
-	// if err = categoryRepo.Create(newPost.ID, categories); err != nil {
-	// 	return err
-	// }
+	if err = pu.categoryRepo.Insert(newPost.ID, categories); err != nil {
+		return err
+	}
 	return err
 }
 
