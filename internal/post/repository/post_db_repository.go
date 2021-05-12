@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/innovember/real-time-forum/internal/comment"
 	"github.com/innovember/real-time-forum/internal/helpers"
 	"github.com/innovember/real-time-forum/internal/models"
 	"github.com/innovember/real-time-forum/internal/post"
@@ -13,8 +14,9 @@ import (
 )
 
 type PostDBRepository struct {
-	dbConn   *sql.DB
-	userRepo user.UserRepository
+	dbConn      *sql.DB
+	userRepo    user.UserRepository
+	commentRepo comment.CommentRepository
 }
 
 func NewPostDBRepository(conn *sql.DB, userRepo user.UserRepository) post.PostRepository {
@@ -90,10 +92,10 @@ func (pr *PostDBRepository) SelectAllPosts() ([]models.Post, error) {
 			tx.Rollback()
 			return nil, err
 		}
-		// if p.CommentsNumber, err = commentRepo.GetCommentsNumberByPostID(p.ID); err != nil {
-		// 	tx.Rollback()
-		// 	return nil, err
-		// }
+		if p.CommentsNumber, err = pr.commentRepo.SelectCommentsNumberByPostID(p.ID); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
 		posts = append(posts, p)
 	}
 	err = rows.Err()
@@ -135,9 +137,13 @@ func (pr *PostDBRepository) SelectPostByID(postID int64) (post *models.Post, err
 		tx.Rollback()
 		return nil, err
 	}
-	// if p.CommentsNumber, err = commentRepo.GetCommentsNumberByPostID(p.ID); err != nil {
-	// 	return nil, err
-	// }
+	if p.CommentsNumber, err = pr.commentRepo.SelectCommentsNumberByPostID(p.ID); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
 	return &p, nil
 }
 
@@ -223,9 +229,10 @@ func (pr *PostDBRepository) SelectPostsByCategories(categories []string) (posts 
 			tx.Rollback()
 			return nil, err
 		}
-		// if p.CommentsNumber, err = commentRepo.GetCommentsNumberByPostID(p.ID); err != nil {
-		// 	return nil, err
-		// }
+		if p.CommentsNumber, err = pr.commentRepo.SelectCommentsNumberByPostID(p.ID); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
 		posts = append(posts, p)
 	}
 	err = rows.Err()
@@ -276,9 +283,10 @@ func (pr *PostDBRepository) SelectAllPostsByAuthorID(authorID int64) (posts []mo
 			tx.Rollback()
 			return nil, err
 		}
-		// if p.CommentsNumber, err = commentRepo.GetCommentsNumberByPostID(p.ID); err != nil {
-		// 	return nil, status, err
-		// }
+		if p.CommentsNumber, err = pr.commentRepo.SelectCommentsNumberByPostID(p.ID); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
 		posts = append(posts, p)
 	}
 	err = rows.Err()
