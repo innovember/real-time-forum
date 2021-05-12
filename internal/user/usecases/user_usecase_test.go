@@ -2,6 +2,7 @@ package usecases_test
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"testing"
 
@@ -52,6 +53,21 @@ func TestCheckPassword(t *testing.T) {
 	userRepo := repository.NewUserDBRepository(dbConn)
 	userUCase := usecases.NewUserUsecase(userRepo)
 	if err := userUCase.CheckPassword(&user); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestGetUserByEmailOrNickname(t *testing.T) {
+	dbConn := setup()
+	user := models.InputUserSignIn{
+		Nickname: "erha",
+		Password: "reactdev",
+	}
+	userRepo := repository.NewUserDBRepository(dbConn)
+	userUCase := usecases.NewUserUsecase(userRepo)
+	u, err := userUCase.GetByEmailOrNickname(user.Nickname)
+	fmt.Println(u)
+	if err != nil {
 		t.Error(err)
 	}
 }

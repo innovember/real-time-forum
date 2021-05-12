@@ -59,10 +59,12 @@ func (ur *UserDBRepository) SelectByEmail(email string) (*models.User, error) {
 	if tx, err = ur.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
 		return nil, err
 	}
-	if err = tx.QueryRow(`SELECT id, nickname, email, password
+	if err = tx.QueryRow(`SELECT id, nickname, email, password, status
 						  FROM users
 						  WHERE email = ?
-	`, email).Scan(&u.ID, &u.Nickname, &u.Email, &u.Password); err != nil {
+	`, email).Scan(&u.ID, &u.Nickname,
+		&u.Email, &u.Password,
+		&u.Status); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -83,10 +85,12 @@ func (ur *UserDBRepository) SelectByNickname(nickname string) (*models.User, err
 	if tx, err = ur.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
 		return nil, err
 	}
-	if err = tx.QueryRow(`SELECT id, nickname, email, password
+	if err = tx.QueryRow(`SELECT id, nickname, email, password,status
 						  FROM users
 						  WHERE nickname = ?
-	`, nickname).Scan(&u.ID, &u.Nickname, &u.Email, &u.Password); err != nil {
+	`, nickname).Scan(&u.ID, &u.Nickname,
+		&u.Email, &u.Password,
+		&u.Status); err != nil {
 		tx.Rollback()
 		return nil, err
 	}

@@ -38,6 +38,8 @@ var (
 	StatusOffline           = "offline"
 	PostCreated             = "Your post has been created"
 	AllCategories           = "List of all categories"
+	UserData                = "User data fetched"
+	LoginSuccess            = "You have logged in"
 )
 
 const (

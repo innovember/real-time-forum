@@ -75,7 +75,7 @@ func (sh *SessionHandler) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 			response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
 			return
 		}
-		response.JSON(w, true, http.StatusOK, "", user)
+		response.JSON(w, true, http.StatusOK, consts.LoginSuccess, nil)
 		return
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPOST.Error(), nil)
