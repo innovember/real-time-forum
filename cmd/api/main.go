@@ -14,6 +14,18 @@ import (
 	sessionRepo "github.com/innovember/real-time-forum/internal/session/repository"
 	sessionUsecase "github.com/innovember/real-time-forum/internal/session/usecases"
 
+	categoryDelivery "github.com/innovember/real-time-forum/internal/category/delivery"
+	categoryRepo "github.com/innovember/real-time-forum/internal/category/repository"
+	categoryUsecase "github.com/innovember/real-time-forum/internal/category/usecases"
+
+	postDelivery "github.com/innovember/real-time-forum/internal/post/delivery"
+	postRepo "github.com/innovember/real-time-forum/internal/post/repository"
+	postUsecase "github.com/innovember/real-time-forum/internal/post/usecases"
+
+	commentDelivery "github.com/innovember/real-time-forum/internal/comment/delivery"
+	commentRepo "github.com/innovember/real-time-forum/internal/comment/repository"
+	commentUsecase "github.com/innovember/real-time-forum/internal/comment/usecases"
+
 	"github.com/innovember/real-time-forum/config"
 	"github.com/innovember/real-time-forum/pkg/database"
 )
@@ -43,10 +55,18 @@ func main() {
 
 	userRepository := userRepo.NewUserDBRepository(dbConn)
 	sessionRepository := sessionRepo.NewSessionDBRepository(dbConn)
+	categoryRepository := categoryRepo.NewCategoryDBRepository(dbConn)
+	postRepository := postRepo.NewPostDBRepository(dbConn, userRepository)
+	commentRepository := commentRepo.NewCommentDBRepository(dbConn)
 
 	userUsecase := userUsecase.NewUserUsecase(userRepository)
 	sessionUsecase := sessionUsecase.NewSessionUsecase(sessionRepository)
+	categoryUsecase := categoryUsecase.NewCategoryUsecase(categoryRepository)
+	postUsecase := postUsecase.NewPostUsecase(postRepository, categoryRepository)
+	commentUsecase := commentUsecase.NewCommentUsecase(commentRepository)
+
 	go sessionUsecase.DeleteExpiredSessions()
+
 	mux := http.NewServeMux()
 	mm := mwares.NewMiddlewareManager(userUsecase, sessionUsecase)
 
@@ -55,6 +75,15 @@ func main() {
 
 	sessionHandler := sessionDelivery.NewSessionHandler(sessionUsecase, userUsecase)
 	sessionHandler.Configure(mux, mm)
+
+	categoryHandler := categoryDelivery.NewCategoryHandler(categoryUsecase)
+	categoryHandler.Configure(mux, mm)
+
+	postHandler := postDelivery.NewPostHandler(postUsecase, userUsecase)
+	postHandler.Configure(mux, mm)
+
+	commentHandler := commentDelivery.NewCommentHandler(userUsecase, postUsecase, commentUsecase)
+	commentHandler.Configure(mux, mm)
 
 	log.Println("Server is listening", config.GetLocalServerPath())
 	err = http.ListenAndServe(config.GetPort(), mux)
