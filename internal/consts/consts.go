@@ -37,9 +37,12 @@ var (
 	StatusOnline            = "online"
 	StatusOffline           = "offline"
 	PostCreated             = "Your post has been created"
+	CommentCreated          = "Your comment has been created"
 	AllCategories           = "List of all categories"
 	UserData                = "User data fetched"
 	LoginSuccess            = "You have logged in"
+	PostByIDSuccess         = "Post data fetched"
+	ErrPostNotExist         = errors.New("there is no post with such id")
 )
 
 const (
