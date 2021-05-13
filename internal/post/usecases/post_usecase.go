@@ -45,7 +45,14 @@ func (pu *PostUsecase) GetPostByID(postID int64) (post *models.Post, err error) 
 }
 
 func (pu *PostUsecase) GetAllPostsByAuthorID(authorID int64) (posts []models.Post, err error) {
-	if posts, err = pu.postRepo.SelectAllPosts(); err != nil {
+	if posts, err = pu.postRepo.SelectAllPostsByAuthorID(authorID); err != nil {
+		return nil, err
+	}
+	return posts, nil
+}
+
+func (pu *PostUsecase) GetAllPostsByCategories(categories []string) (posts []models.Post, err error) {
+	if posts, err = pu.postRepo.SelectPostsByCategories(categories); err != nil {
 		return nil, err
 	}
 	return posts, nil
