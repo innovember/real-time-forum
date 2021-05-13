@@ -19,10 +19,15 @@ type PostDBRepository struct {
 	commentRepo comment.CommentRepository
 }
 
-func NewPostDBRepository(conn *sql.DB, userRepo user.UserRepository) post.PostRepository {
+func NewPostDBRepository(
+	conn *sql.DB,
+	userRepo user.UserRepository,
+	commentRepo comment.CommentRepository,
+) post.PostRepository {
 	return &PostDBRepository{
-		dbConn:   conn,
-		userRepo: userRepo,
+		dbConn:      conn,
+		userRepo:    userRepo,
+		commentRepo: commentRepo,
 	}
 }
 
@@ -137,7 +142,8 @@ func (pr *PostDBRepository) SelectPostByID(postID int64) (post *models.Post, err
 		tx.Rollback()
 		return nil, err
 	}
-	if p.CommentsNumber, err = pr.commentRepo.SelectCommentsNumberByPostID(p.ID); err != nil {
+	p.CommentsNumber, err = pr.commentRepo.SelectCommentsNumberByPostID(p.ID)
+	if err != nil {
 		tx.Rollback()
 		return nil, err
 	}

@@ -3,6 +3,7 @@ package delivery
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/innovember/real-time-forum/internal/consts"
 	"github.com/innovember/real-time-forum/internal/models"
@@ -26,6 +27,8 @@ func NewPostHandler(postUcase post.PostUsecase, userUcase user.UserUsecase) *Pos
 
 func (ph *PostHandler) Configure(mux *http.ServeMux, mm *mwares.MiddlewareManager) {
 	mux.HandleFunc("/api/v1/post", mm.CORSConfig(mm.CheckCSRF(mm.CheckAuth(ph.HandlerCreatePost))))
+	mux.HandleFunc("/api/v1/posts/", mm.CORSConfig(ph.HandlerGetPost))
+	// mux.HandleFunc("/api/v1/posts", mm.CORSConfig(ph.HandlerGetPosts))
 }
 
 func (ph *PostHandler) HandlerCreatePost(w http.ResponseWriter, r *http.Request) {
@@ -68,6 +71,28 @@ func (ph *PostHandler) HandlerCreatePost(w http.ResponseWriter, r *http.Request)
 		return
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPOST.Error(), nil)
+		return
+	}
+}
+
+func (ph *PostHandler) HandlerGetPost(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		_id := r.URL.Path[len("/api/v1/posts/"):]
+		postID, err := strconv.Atoi(_id)
+		if err != nil {
+			response.JSON(w, false, http.StatusBadRequest, consts.ErrPostNotExist.Error(), nil)
+			return
+		}
+		post, err := ph.postUcase.GetPostByID(int64(postID))
+		if err != nil {
+			response.JSON(w, true, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
+		response.JSON(w, true, http.StatusOK, consts.PostByIDSuccess, post)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
 		return
 	}
 }
