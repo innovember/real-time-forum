@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/innovember/real-time-forum/internal/comment"
+	"github.com/innovember/real-time-forum/internal/consts"
 	"github.com/innovember/real-time-forum/internal/helpers"
 	"github.com/innovember/real-time-forum/internal/models"
 	"github.com/innovember/real-time-forum/internal/user"
@@ -36,6 +37,9 @@ func (cr *CommentDBRepository) SelectCommentsNumberByPostID(postID int64) (comme
 	FROM comments
 	WHERE post_id = ?`, postID).Scan(&commentsNumber); err != nil {
 		tx.Rollback()
+		if err == consts.ErrNoData {
+			return 0, nil
+		}
 		return 0, err
 	}
 	if err = tx.Commit(); err != nil {
