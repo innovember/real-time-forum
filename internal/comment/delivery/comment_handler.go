@@ -33,7 +33,7 @@ func NewCommentHandler(
 
 func (ch *CommentHandler) Configure(mux *http.ServeMux, mm *mwares.MiddlewareManager) {
 	mux.HandleFunc("/api/v1/comment", mm.CORSConfig(mm.CheckCSRF(mm.CheckAuth(ch.HandlerCreateComment))))
-	// mux.HandleFunc("/api/v1/comments", mm.CORSConfig(ch.HandlertGetComments))
+	mux.HandleFunc("/api/v1/comments", mm.CORSConfig(ch.HandlertGetComments))
 }
 
 func (ch *CommentHandler) HandlerCreateComment(w http.ResponseWriter, r *http.Request) {
@@ -62,10 +62,16 @@ func (ch *CommentHandler) HandlerCreateComment(w http.ResponseWriter, r *http.Re
 				return
 			}
 		}
-		_, err = ch.postUcase.GetPostByID(input.PostID)
+		_, err = ch.postUcase.GetPostByID(int64(input.PostID))
 		if err != nil {
-			response.JSON(w, false, http.StatusBadRequest, consts.ErrPostNotExist.Error(), nil)
-			return
+			switch err {
+			case consts.ErrNoData:
+				response.JSON(w, false, http.StatusNotFound, consts.ErrPostNotExist.Error(), nil)
+				return
+			default:
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
 		}
 		comment := models.Comment{
 			AuthorID: user.ID,
@@ -73,10 +79,66 @@ func (ch *CommentHandler) HandlerCreateComment(w http.ResponseWriter, r *http.Re
 		}
 		err = ch.commentUcase.Create(&comment)
 		if err != nil {
-			response.JSON(w, true, http.StatusInternalServerError, err.Error(), nil)
+			response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
 			return
 		}
 		response.JSON(w, true, http.StatusCreated, consts.CommentCreated, nil)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPOST.Error(), nil)
+		return
+	}
+}
+
+func (ch *CommentHandler) HandlertGetComments(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		var (
+			input    models.InputGetComments
+			err      error
+			comments []models.Comment
+		)
+		if err = json.NewDecoder(r.Body).Decode(&input); err != nil {
+			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
+			return
+		}
+		switch input.Option {
+		case "post":
+			_, err := ch.postUcase.GetPostByID(int64(input.PostID))
+			if err != nil {
+				switch err {
+				case consts.ErrNoData:
+					response.JSON(w, true, http.StatusNotFound, consts.ErrPostNotExist.Error(), nil)
+					return
+				default:
+					response.JSON(w, true, http.StatusInternalServerError, err.Error(), nil)
+					return
+				}
+			}
+			comments, err = ch.commentUcase.GetCommentsByPostID(input.PostID)
+			if err != nil {
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
+		case "user":
+			_, err := ch.userUcase.GetByID(input.UserID)
+			if err != nil {
+				switch err {
+				case consts.ErrNoData:
+					response.JSON(w, false, http.StatusUnauthorized, consts.ErrUserNotExist.Error(), nil)
+					return
+				default:
+					response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+					return
+				}
+			}
+			comments, err = ch.commentUcase.GetCommentsByAuthorID(input.UserID)
+			if err != nil {
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
+		}
+		response.JSON(w, true, http.StatusOK, consts.Comments, comments)
 		return
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPOST.Error(), nil)
