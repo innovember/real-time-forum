@@ -20,3 +20,8 @@ type InputPost struct {
 	Content    string   `json:"content"`
 	Categories []string `json:"categories"`
 }
+
+type InputComment struct {
+	PostID  int64  `json:"postID"`
+	Content string `json:"content"`
+}

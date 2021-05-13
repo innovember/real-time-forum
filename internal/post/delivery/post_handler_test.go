@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	categoryRepo "github.com/innovember/real-time-forum/internal/category/repository"
+	commentRepo "github.com/innovember/real-time-forum/internal/comment/repository"
 	"github.com/innovember/real-time-forum/internal/consts"
 	"github.com/innovember/real-time-forum/internal/models"
 	"github.com/innovember/real-time-forum/internal/post/delivery"
@@ -44,7 +45,8 @@ func TestCreate(t *testing.T) {
 	userRepo := userRepo.NewUserDBRepository(dbConn)
 	userUcase := userUcase.NewUserUsecase(userRepo)
 	categoryRepository := categoryRepo.NewCategoryDBRepository(dbConn)
-	postRepo := repository.NewPostDBRepository(dbConn, userRepo)
+	commentRepo := commentRepo.NewCommentDBRepository(dbConn, userRepo)
+	postRepo := repository.NewPostDBRepository(dbConn, userRepo, commentRepo)
 	postUCase := usecases.NewPostUsecase(postRepo, categoryRepository)
 	delivery := delivery.NewPostHandler(postUCase, userUcase)
 	body, err := json.Marshal(post)
