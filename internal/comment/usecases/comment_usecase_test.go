@@ -2,6 +2,7 @@ package usecases_test
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"testing"
 
@@ -37,5 +38,37 @@ func TestCreateComment(t *testing.T) {
 	commentUcase := usecases.NewCommentUsecase(commentRepo)
 	if err := commentUcase.Create(&comment); err != nil {
 		t.Error(err)
+	}
+}
+
+func TestGetComments(t *testing.T) {
+	dbConn := setup()
+	userRepo := userRepo.NewUserDBRepository(dbConn)
+	commentRepo := repository.NewCommentDBRepository(dbConn, userRepo)
+	commentUcase := usecases.NewCommentUsecase(commentRepo)
+	// for i := 0; i < 30; i++ {
+	// 	comment := models.Comment{
+	// 		AuthorID: 1,
+	// 		PostID:   1,
+	// 		Content:  fmt.Sprintf("smth new text #%d", i),
+	// 	}
+	// 	time.Sleep(1 * time.Second)
+	// 	if err := commentUcase.Create(&comment); err != nil {
+	// 		t.Error(err)
+	// 	}
+	// }
+	comments, err := commentUcase.GetCommentsByPostID(&models.InputGetComments{
+		Option:        "post",
+		PostID:        1,
+		LastCommentID: 20,
+		Limit:         5,
+	})
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	for _, comment := range comments {
+		fmt.Printf("%+v\n", comment)
+		fmt.Println("-------------------------------------------------------")
 	}
 }

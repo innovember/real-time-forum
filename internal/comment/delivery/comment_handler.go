@@ -115,7 +115,7 @@ func (ch *CommentHandler) HandlertGetComments(w http.ResponseWriter, r *http.Req
 					return
 				}
 			}
-			comments, err = ch.commentUcase.GetCommentsByPostID(input.PostID)
+			comments, err = ch.commentUcase.GetCommentsByPostID(&input)
 			if err != nil {
 				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
 				return
@@ -132,7 +132,7 @@ func (ch *CommentHandler) HandlertGetComments(w http.ResponseWriter, r *http.Req
 					return
 				}
 			}
-			comments, err = ch.commentUcase.GetCommentsByAuthorID(input.UserID)
+			comments, err = ch.commentUcase.GetCommentsByAuthorID(&input)
 			if err != nil {
 				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
 				return

@@ -21,15 +21,15 @@ func (cu *CommentUsecase) Create(comment *models.Comment) (err error) {
 	}
 	return err
 }
-func (cu *CommentUsecase) GetCommentsByPostID(postID int64) (comments []models.Comment, err error) {
-	if comments, err = cu.commentRepo.SelectCommentsByPostID(postID); err != nil {
+func (cu *CommentUsecase) GetCommentsByPostID(input *models.InputGetComments) (comments []models.Comment, err error) {
+	if comments, err = cu.commentRepo.SelectCommentsByPostID(input); err != nil {
 		return nil, err
 	}
 	return comments, err
 }
 
-func (cu *CommentUsecase) GetCommentsByAuthorID(authorID int64) (comments []models.Comment, err error) {
-	if comments, err = cu.commentRepo.SelectCommentsByAuthorID(authorID); err != nil {
+func (cu *CommentUsecase) GetCommentsByAuthorID(input *models.InputGetComments) (comments []models.Comment, err error) {
+	if comments, err = cu.commentRepo.SelectCommentsByAuthorID(input); err != nil {
 		return nil, err
 	}
 	return comments, err
