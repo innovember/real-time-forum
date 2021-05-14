@@ -117,7 +117,7 @@ func (ph *PostHandler) HandlerGetPosts(w http.ResponseWriter, r *http.Request) {
 		}
 		switch input.Option {
 		case "all":
-			posts, err = ph.postUcase.GetAllPosts()
+			posts, err = ph.postUcase.GetAllPosts(&input)
 			if err != nil {
 				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
 				return
@@ -134,13 +134,13 @@ func (ph *PostHandler) HandlerGetPosts(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			}
-			posts, err = ph.postUcase.GetAllPostsByAuthorID(input.AuthorID)
+			posts, err = ph.postUcase.GetAllPostsByAuthorID(&input)
 			if err != nil {
 				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
 				return
 			}
 		case "categories":
-			posts, err = ph.postUcase.GetAllPostsByCategories(input.Categories)
+			posts, err = ph.postUcase.GetAllPostsByCategories(&input)
 			if err != nil {
 				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
 				return

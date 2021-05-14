@@ -59,23 +59,38 @@ func (pr *PostDBRepository) Insert(post *models.Post) (*models.Post, error) {
 	return post, nil
 }
 
-func (pr *PostDBRepository) SelectAllPosts() ([]models.Post, error) {
+func (pr *PostDBRepository) SelectAllPosts(input *models.InputGetPosts) ([]models.Post, error) {
 	var (
 		rows  *sql.Rows
 		ctx   context.Context
 		tx    *sql.Tx
 		err   error
 		posts []models.Post
+		total int
 	)
 	ctx = context.Background()
 	if tx, err = pr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
 		return nil, err
 	}
+	if err = tx.QueryRow(`SELECT count(id) AS total
+	 					FROM posts;
+						 `).Scan(
+		&total); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if input.LastPostID == 0 {
+		input.LastPostID = total + 1
+	}
 	if rows, err = tx.Query(`
 		SELECT *
 		FROM posts
+		WHERE id < ?
 		ORDER BY created_at DESC
-		`); err != nil {
+		LIMIT ?
+		`,
+		input.LastPostID,
+		input.Limit); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -192,16 +207,27 @@ func (pr *PostDBRepository) SelectCategories(post *models.Post) (err error) {
 	return nil
 }
 
-func (pr *PostDBRepository) SelectPostsByCategories(categories []string) (posts []models.Post, err error) {
+func (pr *PostDBRepository) SelectPostsByCategories(input *models.InputGetPosts) (posts []models.Post, err error) {
 	var (
 		rows           *sql.Rows
 		ctx            context.Context
 		tx             *sql.Tx
-		categoriesList = strings.Join(categories, ", ")
+		categoriesList = strings.Join(input.Categories, ", ")
+		total          int
 	)
 	ctx = context.Background()
 	if tx, err = pr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
 		return nil, err
+	}
+	if err = tx.QueryRow(`SELECT count(id) AS total
+	 					FROM posts;
+						 `).Scan(
+		&total); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if input.LastPostID == 0 {
+		input.LastPostID = total + 1
 	}
 	query := fmt.Sprintf(`
 		SELECT p.*
@@ -213,7 +239,13 @@ func (pr *PostDBRepository) SelectPostsByCategories(categories []string) (posts 
 		WHERE c.name in (%s)
 		GROUP BY p.id
 		HAVING COUNT(DISTINCT c.id) = %d
-		ORDER BY p.created_at DESC`, categoriesList, len(categories))
+		WHERE p.id < %d
+		ORDER BY p.created_at DESC
+		LIMIT %d`,
+		categoriesList,
+		len(input.Categories),
+		input.LastPostID,
+		input.Limit)
 	if rows, err = tx.Query(query); err != nil {
 		return nil, err
 	}
@@ -252,22 +284,37 @@ func (pr *PostDBRepository) SelectPostsByCategories(categories []string) (posts 
 	return posts, nil
 }
 
-func (pr *PostDBRepository) SelectAllPostsByAuthorID(authorID int64) (posts []models.Post, err error) {
+func (pr *PostDBRepository) SelectAllPostsByAuthorID(input *models.InputGetPosts) (posts []models.Post, err error) {
 	var (
-		rows *sql.Rows
-		ctx  context.Context
-		tx   *sql.Tx
+		rows  *sql.Rows
+		ctx   context.Context
+		tx    *sql.Tx
+		total int
 	)
 	ctx = context.Background()
 	if tx, err = pr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
 		return nil, err
 	}
+	if err = tx.QueryRow(`SELECT count(id) AS total
+	 					FROM posts;
+						 `).Scan(
+		&total); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if input.LastPostID == 0 {
+		input.LastPostID = total + 1
+	}
 	if rows, err = tx.Query(`
 		SELECT *
 		FROM posts
 		WHERE author_id = ?
+		AND id < ?
+		LIMIT ?
 		ORDER BY created_at DESC
-		`, authorID); err != nil {
+		`, input.AuthorID,
+		input.LastPostID,
+		input.Limit); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
