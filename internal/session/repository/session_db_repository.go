@@ -107,7 +107,7 @@ func (sr *SessionDBRepository) DeleteTokens() error {
 	if rows, err = tx.Query(`SELECT user_id
 							 FROM sessions
 							 WHERE expires_at < ?
-		`, helpers.GetCurrentUnixTime()); err != nil {
+		`, helpers.GetCurrentUnixTime()); err != nil && err != consts.ErrNoData {
 		tx.Rollback()
 		return err
 	}
@@ -125,11 +125,14 @@ func (sr *SessionDBRepository) DeleteTokens() error {
 	if err != nil {
 		return err
 	}
-	for _, id := range users {
-		err = sr.UpdateStatus(id, consts.StatusOffline)
-		if err != nil {
-			tx.Rollback()
-			return err
+	if len(users) > 0 {
+		for _, id := range users {
+			if _, err = tx.Exec(`UPDATE users
+						 SET status = ?
+						 WHERE id = ?`, consts.StatusOffline, id); err != nil {
+				tx.Rollback()
+				return err
+			}
 		}
 	}
 	if _, err = tx.Exec(`DELETE FROM sessions

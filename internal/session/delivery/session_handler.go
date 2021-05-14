@@ -30,7 +30,7 @@ func NewSessionHandler(sessionUcase session.SessionUsecase,
 
 func (sh *SessionHandler) Configure(mux *http.ServeMux, mm *mwares.MiddlewareManager) {
 	mux.HandleFunc("/api/v1/session/login", mm.CORSConfig(sh.HandlerLogin))
-	mux.HandleFunc("/api/v1/session/logout", mm.CORSConfig(mm.CheckAuth(sh.HandlerLogout)))
+	mux.HandleFunc("/api/v1/session/logout", mm.CORSConfig(mm.CheckCSRF(mm.CheckAuth(sh.HandlerLogout))))
 }
 
 func (sh *SessionHandler) HandlerLogin(w http.ResponseWriter, r *http.Request) {

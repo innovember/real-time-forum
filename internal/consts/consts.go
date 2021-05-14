@@ -43,6 +43,8 @@ var (
 	LoginSuccess            = "You have logged in"
 	PostByIDSuccess         = "Post data fetched"
 	ErrPostNotExist         = errors.New("there is no post with such id")
+	Posts                   = "Posts fetched"
+	Comments                = "Comments fetched"
 )
 
 const (

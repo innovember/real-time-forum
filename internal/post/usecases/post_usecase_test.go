@@ -59,3 +59,40 @@ func TestGetPost(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestGetPosts(t *testing.T) {
+	dbConn := setup()
+	userRepo := userRepo.NewUserDBRepository(dbConn)
+	commentRepo := commentRepo.NewCommentDBRepository(dbConn, userRepo)
+	categoryRepository := categoryRepo.NewCategoryDBRepository(dbConn)
+	postRepo := repository.NewPostDBRepository(dbConn, userRepo, commentRepo)
+	postUCase := usecases.NewPostUsecase(postRepo, categoryRepository)
+	// for i := 0; i < 30; i++ {
+	// 	post := models.Post{
+	// 		AuthorID: 1,
+	// 		Title:    fmt.Sprintf("smth new title #%d", i),
+	// 		Content:  fmt.Sprintf("some random text #%d", i),
+	// 	}
+	// 	categories := []string{"new", "random", "smth"}
+	// 	time.Sleep(1 * time.Second)
+	// 	if err := postUCase.Create(&post, categories); err != nil {
+	// 		t.Error(err)
+	// 	}
+	// }
+	posts, err := postUCase.GetAllPosts(&models.InputGetPosts{
+		Option:     "all",
+		LastPostID: 24,
+		Limit:      5,
+	})
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	for _, post := range posts {
+		fmt.Printf("%+v\n", post)
+		fmt.Println("-------------------------------------------------------")
+	}
+	if err != nil {
+		t.Error(err)
+	}
+}

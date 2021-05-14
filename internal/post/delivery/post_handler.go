@@ -28,7 +28,7 @@ func NewPostHandler(postUcase post.PostUsecase, userUcase user.UserUsecase) *Pos
 func (ph *PostHandler) Configure(mux *http.ServeMux, mm *mwares.MiddlewareManager) {
 	mux.HandleFunc("/api/v1/post", mm.CORSConfig(mm.CheckCSRF(mm.CheckAuth(ph.HandlerCreatePost))))
 	mux.HandleFunc("/api/v1/posts/", mm.CORSConfig(ph.HandlerGetPost))
-	// mux.HandleFunc("/api/v1/posts", mm.CORSConfig(ph.HandlerGetPosts))
+	mux.HandleFunc("/api/v1/posts", mm.CORSConfig(ph.HandlerGetPosts))
 }
 
 func (ph *PostHandler) HandlerCreatePost(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +64,7 @@ func (ph *PostHandler) HandlerCreatePost(w http.ResponseWriter, r *http.Request)
 		}
 		err = ph.postUcase.Create(&post, input.Categories)
 		if err != nil {
-			response.JSON(w, true, http.StatusInternalServerError, err.Error(), nil)
+			response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
 			return
 		}
 		response.JSON(w, true, http.StatusCreated, consts.PostCreated, nil)
@@ -86,13 +86,70 @@ func (ph *PostHandler) HandlerGetPost(w http.ResponseWriter, r *http.Request) {
 		}
 		post, err := ph.postUcase.GetPostByID(int64(postID))
 		if err != nil {
-			response.JSON(w, true, http.StatusInternalServerError, err.Error(), nil)
-			return
+			switch err {
+			case consts.ErrNoData:
+				response.JSON(w, false, http.StatusNotFound, consts.ErrPostNotExist.Error(), nil)
+				return
+			default:
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
 		}
 		response.JSON(w, true, http.StatusOK, consts.PostByIDSuccess, post)
 		return
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
+		return
+	}
+}
+
+func (ph *PostHandler) HandlerGetPosts(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		var (
+			input models.InputGetPosts
+			err   error
+			posts []models.Post
+		)
+		if err = json.NewDecoder(r.Body).Decode(&input); err != nil {
+			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
+			return
+		}
+		switch input.Option {
+		case "all":
+			posts, err = ph.postUcase.GetAllPosts(&input)
+			if err != nil {
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
+		case "author":
+			_, err := ph.userUcase.GetByID(input.AuthorID)
+			if err != nil {
+				switch err {
+				case consts.ErrNoData:
+					response.JSON(w, false, http.StatusUnauthorized, consts.ErrUserNotExist.Error(), nil)
+					return
+				default:
+					response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+					return
+				}
+			}
+			posts, err = ph.postUcase.GetAllPostsByAuthorID(&input)
+			if err != nil {
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
+		case "categories":
+			posts, err = ph.postUcase.GetAllPostsByCategories(&input)
+			if err != nil {
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
+		}
+		response.JSON(w, true, http.StatusOK, consts.Posts, posts)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPOST.Error(), nil)
 		return
 	}
 }

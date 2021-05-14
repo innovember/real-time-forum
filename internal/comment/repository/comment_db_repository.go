@@ -74,21 +74,36 @@ func (cr *CommentDBRepository) Insert(comment *models.Comment) (err error) {
 	return nil
 }
 
-func (cr *CommentDBRepository) SelectCommentsByPostID(postID int64) (comments []models.Comment, err error) {
+func (cr *CommentDBRepository) SelectCommentsByPostID(input *models.InputGetComments) (comments []models.Comment, err error) {
 	var (
-		ctx  context.Context
-		tx   *sql.Tx
-		rows *sql.Rows
+		ctx   context.Context
+		tx    *sql.Tx
+		rows  *sql.Rows
+		total int
 	)
 	ctx = context.Background()
 	if tx, err = cr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
 		return nil, err
 	}
+	if err = tx.QueryRow(`SELECT count(id) AS total
+	 					FROM comments;
+						 `).Scan(
+		&total); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if input.LastCommentID == 0 {
+		input.LastCommentID = total + 1
+	}
 	if rows, err = tx.Query(`
 		SELECT *
 		FROM comments
+		WHERE id < ?
 		ORDER BY created_at DESC
-		`); err != nil {
+		LIMIT ?
+		`,
+		input.LastCommentID,
+		input.Limit); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -120,22 +135,38 @@ func (cr *CommentDBRepository) SelectCommentsByPostID(postID int64) (comments []
 	return comments, nil
 }
 
-func (cr *CommentDBRepository) SelectCommentsByAuthorID(authorID int64) (comments []models.Comment, err error) {
+func (cr *CommentDBRepository) SelectCommentsByAuthorID(input *models.InputGetComments) (comments []models.Comment, err error) {
 	var (
-		ctx  context.Context
-		tx   *sql.Tx
-		rows *sql.Rows
+		ctx   context.Context
+		tx    *sql.Tx
+		rows  *sql.Rows
+		total int
 	)
 	ctx = context.Background()
 	if tx, err = cr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
 		return nil, err
 	}
+	if err = tx.QueryRow(`SELECT count(id) AS total
+	 					FROM comments;
+						 `).Scan(
+		&total); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if input.LastCommentID == 0 {
+		input.LastCommentID = total + 1
+	}
 	if rows, err = tx.Query(`
 		SELECT *
 		FROM comments
-		WHERE author_id = $1
+		WHERE author_id = ?
+		AND id < ?
 		ORDER BY created_at DESC
-		`, authorID); err != nil {
+		LIMIT ?
+		`,
+		input.UserID,
+		input.LastCommentID,
+		input.Limit); err != nil {
 		tx.Rollback()
 		return nil, err
 	}

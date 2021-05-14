@@ -30,8 +30,8 @@ func (pu *PostUsecase) Create(post *models.Post, categories []string) error {
 	return err
 }
 
-func (pu *PostUsecase) GetAllPosts() (posts []models.Post, err error) {
-	if posts, err = pu.postRepo.SelectAllPosts(); err != nil {
+func (pu *PostUsecase) GetAllPosts(input *models.InputGetPosts) (posts []models.Post, err error) {
+	if posts, err = pu.postRepo.SelectAllPosts(input); err != nil {
 		return nil, err
 	}
 	return posts, nil
@@ -44,8 +44,15 @@ func (pu *PostUsecase) GetPostByID(postID int64) (post *models.Post, err error) 
 	return post, nil
 }
 
-func (pu *PostUsecase) GetAllPostsByAuthorID(authorID int64) (posts []models.Post, err error) {
-	if posts, err = pu.postRepo.SelectAllPosts(); err != nil {
+func (pu *PostUsecase) GetAllPostsByAuthorID(input *models.InputGetPosts) (posts []models.Post, err error) {
+	if posts, err = pu.postRepo.SelectAllPostsByAuthorID(input); err != nil {
+		return nil, err
+	}
+	return posts, nil
+}
+
+func (pu *PostUsecase) GetAllPostsByCategories(input *models.InputGetPosts) (posts []models.Post, err error) {
+	if posts, err = pu.postRepo.SelectPostsByCategories(input); err != nil {
 		return nil, err
 	}
 	return posts, nil
