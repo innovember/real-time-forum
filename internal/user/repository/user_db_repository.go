@@ -40,6 +40,7 @@ func (ur *UserDBRepository) Insert(user *models.User) (err error) {
 		return err
 	}
 	if _, err = result.LastInsertId(); err != nil {
+		tx.Rollback()
 		return err
 	}
 	if err = tx.Commit(); err != nil {
