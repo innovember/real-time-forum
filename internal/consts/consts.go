@@ -45,6 +45,7 @@ var (
 	ErrPostNotExist         = errors.New("there is no post with such id")
 	Posts                   = "Posts fetched"
 	Comments                = "Comments fetched"
+	AllChats                = "All chats fetched"
 )
 
 const (

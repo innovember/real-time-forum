@@ -8,7 +8,9 @@ import (
 )
 
 type Room struct {
-	ID int64 `json:"id"`
+	ID              int64 `json:"id"`
+	User            *User `json:"user"`
+	LastMessageDate int64 `json:"lastMessageDate"`
 }
 
 type Message struct {
@@ -51,3 +53,4 @@ type Client struct {
 
 	MU sync.Mutex
 }
+
