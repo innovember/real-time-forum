@@ -18,13 +18,14 @@ func NewRoomRepository(conn *sql.DB) chat.RoomRepository {
 	}
 }
 
-func (rr *RoomRepository) InsertRoom(userID1, userID2 int) (*models.Room, error) {
+func (rr *RoomRepository) InsertRoom(userID1, userID2 int64) (*models.Room, error) {
 	var (
 		ctx    context.Context
 		tx     *sql.Tx
 		result sql.Result
 		err    error
 		room   = &models.Room{}
+		user   = &models.User{}
 	)
 	ctx = context.Background()
 	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
@@ -51,22 +52,31 @@ func (rr *RoomRepository) InsertRoom(userID1, userID2 int) (*models.Room, error)
 		tx.Rollback()
 		return nil, err
 	}
+	err = tx.QueryRow(`
+						SELECT id, nickname
+						FROM users
+						WHERE id = ?`, userID2).Scan(&user.ID, &user.Nickname)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	room.User = user
 	if err = tx.Commit(); err != nil {
 		return nil, err
 	}
 	return room, nil
 }
 
-func (rr *RoomRepository) SelectRoomByUsers(userID1, userID2 int) (*models.Room, error) {
+func (rr *RoomRepository) SelectRoomByUsers(userID1, userID2 int64) (int64, error) {
 	var (
-		ctx  context.Context
-		tx   *sql.Tx
-		err  error
-		room = &models.Room{}
+		ctx    context.Context
+		tx     *sql.Tx
+		err    error
+		roomID int64
 	)
 	ctx = context.Background()
 	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
-		return nil, err
+		return 0, err
 	}
 	if err = tx.QueryRow(`SELECT room_id
 							FROM room
@@ -74,17 +84,17 @@ func (rr *RoomRepository) SelectRoomByUsers(userID1, userID2 int) (*models.Room,
 							GROUP BY room_id
 							HAVING COUNT (*) > 1;
 						 `).Scan(
-		&room.ID); err != nil {
+		&roomID); err != nil {
 		tx.Rollback()
-		return nil, err
+		return 0, err
 	}
 	if err = tx.Commit(); err != nil {
-		return nil, err
+		return 0, err
 	}
-	return room, nil
+	return roomID, nil
 }
 
-func (rr *RoomRepository) SelectUsersByRoom(roomID int) ([]models.User, error) {
+func (rr *RoomRepository) SelectUsersByRoom(roomID int64) ([]models.User, error) {
 	var (
 		ctx   context.Context
 		tx    *sql.Tx
@@ -124,31 +134,30 @@ func (rr *RoomRepository) SelectUsersByRoom(roomID int) ([]models.User, error) {
 	return users, nil
 }
 
-func (rr *RoomRepository) SelectAllRoomsByUserID(userID int64) ([]models.Room, error) {
+func (rr *RoomRepository) SelectAllUsers(userID int64) ([]*models.User, error) {
 	var (
 		ctx   context.Context
 		tx    *sql.Tx
 		err   error
 		rows  *sql.Rows
-		rooms []models.Room
+		users []*models.User
 	)
 	ctx = context.Background()
 	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
 		return nil, err
 	}
-	rows, err = tx.Query(`SELECT room_id
-							FROM room
-							WHERE user_id = ?;
-						 `)
+	rows, err = tx.Query(`SELECT id, nickname
+	 FROM users
+	  WHERE id != ?`, userID)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var r models.Room
-		rows.Scan(&r.ID)
-		rooms = append(rooms, r)
+		var u models.User
+		rows.Scan(&u.ID, &u.Nickname)
+		users = append(users, &u)
 	}
 	if err = rows.Err(); err != nil {
 		tx.Rollback()
@@ -157,7 +166,7 @@ func (rr *RoomRepository) SelectAllRoomsByUserID(userID int64) ([]models.Room, e
 	if err = tx.Commit(); err != nil {
 		return nil, err
 	}
-	return rooms, nil
+	return users, nil
 }
 
 func (rr *RoomRepository) DeleteRoom(id int) error {
@@ -191,7 +200,7 @@ func (rr *RoomRepository) DeleteRoom(id int) error {
 	return nil
 }
 
-func (rr *RoomRepository) InsertMessage(roomID int, msg *models.Message) error {
+func (rr *RoomRepository) InsertMessage(roomID int64, msg *models.Message) error {
 	var (
 		ctx    context.Context
 		tx     *sql.Tx
@@ -221,7 +230,7 @@ func (rr *RoomRepository) InsertMessage(roomID int, msg *models.Message) error {
 	return nil
 }
 
-func (rr *RoomRepository) SelectMessages(roomID int, lastMessageID int64) ([]models.Message, error) {
+func (rr *RoomRepository) SelectMessages(roomID int64, lastMessageID int64) ([]models.Message, error) {
 	var (
 		ctx      context.Context
 		tx       *sql.Tx
@@ -279,7 +288,7 @@ func (rr *RoomRepository) SelectMessages(roomID int, lastMessageID int64) ([]mod
 	return messages, nil
 }
 
-func (rr *RoomRepository) SelectLastMessageDate(roomID int) (int64, error) {
+func (rr *RoomRepository) SelectLastMessageDate(roomID int64) (int64, error) {
 	var (
 		ctx             context.Context
 		tx              *sql.Tx
