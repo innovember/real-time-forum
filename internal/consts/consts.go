@@ -46,6 +46,7 @@ var (
 	Posts                   = "Posts fetched"
 	Comments                = "Comments fetched"
 	AllChats                = "All chats fetched"
+	RoomMessages            = "Messages fetched by roomID"
 )
 
 const (
