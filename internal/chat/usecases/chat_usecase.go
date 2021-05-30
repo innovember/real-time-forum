@@ -62,7 +62,7 @@ func (ru *RoomUsecase) GetAllRoomsByUserID(userID int64) ([]models.Room, error) 
 	return rooms, nil
 }
 
-func (ru *RoomUsecase) DeleteRoom(id int) error {
+func (ru *RoomUsecase) DeleteRoom(id int64) error {
 	err := ru.roomRepo.DeleteRoom(id)
 	if err != nil {
 		return err

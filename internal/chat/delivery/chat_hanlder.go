@@ -55,7 +55,40 @@ func (ch *ChatHandler) HandlerGetChats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ch *ChatHandler) HandlerGetRoom(w http.ResponseWriter, r *http.Request) {
-
+	switch r.Method {
+	case http.MethodPost:
+		var (
+			input models.InputRoom
+			room  *models.Room
+		)
+		cookie, _ := r.Cookie(consts.SessionName)
+		session, err := ch.sessionUcase.GetByToken(cookie.Value)
+		if err != nil {
+			response.JSON(w, false, http.StatusUnauthorized, consts.ErrInvalidSessionToken.Error(), nil)
+			return
+		}
+		if err = json.NewDecoder(r.Body).Decode(&input); err != nil {
+			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
+			return
+		}
+		room, err = ch.roomUsecase.GetRoomByUsers(session.UserID, input.UserID)
+		switch err {
+		case consts.ErrNoData:
+			room, err = ch.roomUsecase.CreateRoom(session.UserID, input.UserID)
+			if err != nil {
+				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+				return
+			}
+		default:
+			response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
+		response.JSON(w, true, http.StatusCreated, consts.Room, room)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPOST.Error(), nil)
+		return
+	}
 }
 
 func (ch *ChatHandler) HandlerGetMessages(w http.ResponseWriter, r *http.Request) {

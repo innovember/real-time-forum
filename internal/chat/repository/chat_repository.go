@@ -169,7 +169,7 @@ func (rr *RoomRepository) SelectAllUsers(userID int64) ([]*models.User, error) {
 	return users, nil
 }
 
-func (rr *RoomRepository) DeleteRoom(id int) error {
+func (rr *RoomRepository) DeleteRoom(id int64) error {
 	var (
 		ctx context.Context
 		tx  *sql.Tx

@@ -47,6 +47,7 @@ var (
 	Comments                = "Comments fetched"
 	AllChats                = "All chats fetched"
 	RoomMessages            = "Messages fetched by roomID"
+	Room                    = "Room ready for chat"
 )
 
 const (
