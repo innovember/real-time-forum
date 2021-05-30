@@ -93,3 +93,11 @@ func (ru *RoomUsecase) GetLastMessageDate(roomID int64) (int64, error) {
 	}
 	return lastMessageDate, nil
 }
+
+func (ru *RoomUsecase) GetAllUsers(userID int64) ([]*models.User, error) {
+	users, err := ru.roomRepo.SelectAllUsers(userID)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}

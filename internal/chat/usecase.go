@@ -11,4 +11,5 @@ type RoomUsecase interface {
 	CreateMessage(roomID int64, msg *models.Message) error
 	GetMessages(roomID int64, lastMessageID int64) ([]models.Message, error)
 	GetLastMessageDate(roomID int64) (int64, error)
+	GetAllUsers(userID int64) ([]*models.User, error)
 }
