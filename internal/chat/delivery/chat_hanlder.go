@@ -59,26 +59,32 @@ func (ch *ChatHandler) HandlerGetRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ch *ChatHandler) HandlerGetMessages(w http.ResponseWriter, r *http.Request) {
-	var (
-		input models.InputRoom
-	)
-	cookie, _ := r.Cookie(consts.SessionName)
-	_, err := ch.sessionUcase.GetByToken(cookie.Value)
-	if err != nil {
-		response.JSON(w, false, http.StatusUnauthorized, consts.ErrInvalidSessionToken.Error(), nil)
+	switch r.Method {
+	case http.MethodPost:
+		var (
+			input models.InputRoom
+		)
+		cookie, _ := r.Cookie(consts.SessionName)
+		_, err := ch.sessionUcase.GetByToken(cookie.Value)
+		if err != nil {
+			response.JSON(w, false, http.StatusUnauthorized, consts.ErrInvalidSessionToken.Error(), nil)
+			return
+		}
+		if err = json.NewDecoder(r.Body).Decode(&input); err != nil {
+			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
+			return
+		}
+		messages, err := ch.roomUsecase.GetMessages(input.RoomID, input.LastMessageID)
+		if err != nil {
+			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
+			return
+		}
+		response.JSON(w, true, http.StatusOK, consts.RoomMessages, messages)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPOST.Error(), nil)
 		return
 	}
-	if err = json.NewDecoder(r.Body).Decode(&input); err != nil {
-		response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
-		return
-	}
-	messages, err := ch.roomUsecase.GetMessages(input.RoomID, input.LastMessageID)
-	if err != nil {
-		response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
-		return
-	}
-	response.JSON(w, true, http.StatusOK, consts.RoomMessages, messages)
-	return
 }
 
 func (ch *ChatHandler) HandlerWsSendMessage(w http.ResponseWriter, r *http.Request) {
