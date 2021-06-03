@@ -314,3 +314,27 @@ func (rr *RoomRepository) SelectLastMessageDate(roomID int64) (int64, error) {
 	}
 	return lastMessageDate, nil
 }
+
+func (rr *RoomRepository) SelectRoomByID(roomID int64) (*models.Room, error) {
+	var (
+		ctx  context.Context
+		tx   *sql.Tx
+		err  error
+		room *models.Room
+	)
+	ctx = context.Background()
+	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return nil, err
+	}
+	if err = tx.QueryRow(`SELECT id
+							FROM rooms
+							WHERE id = ?;
+						 `, roomID).Scan(&room.ID); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+	return room, nil
+}

@@ -101,3 +101,10 @@ func (ru *RoomUsecase) GetAllUsers(userID int64) ([]*models.User, error) {
 	}
 	return users, nil
 }
+func (ru *RoomUsecase) GetRoomByID(roomID int64) (*models.Room, error) {
+	room, err := ru.roomRepo.SelectRoomByID(roomID)
+	if err != nil {
+		return nil, err
+	}
+	return room, nil
+}
