@@ -27,15 +27,13 @@ type Hub struct {
 	Clients map[*Client]bool
 
 	// Inbound messages from the clients.
-	Broadcast chan []*Message
+	Broadcast chan *Message
 
 	// Register requests from the clients.
 	Register chan *Client
 
 	// Unregister requests from clients.
 	Unregister chan *Client
-
-	MU sync.Mutex
 }
 
 type Client struct {
@@ -47,10 +45,21 @@ type Client struct {
 	Conn *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	Send chan []*Message
+	Send chan *Message
 
 	DB *sql.DB
 
 	MU sync.Mutex
 }
 
+type RoomHubs struct {
+	Hubs map[int64]*Hub
+	MU   *sync.Mutex
+}
+
+func NewRoomHubs() *RoomHubs {
+	return &RoomHubs{
+		Hubs: make(map[int64]*Hub),
+		MU:   &sync.Mutex{},
+	}
+}

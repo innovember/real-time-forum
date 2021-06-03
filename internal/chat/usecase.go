@@ -12,4 +12,13 @@ type RoomUsecase interface {
 	GetMessages(roomID int64, lastMessageID int64) ([]models.Message, error)
 	GetLastMessageDate(roomID int64) (int64, error)
 	GetAllUsers(userID int64) ([]*models.User, error)
+	GetRoomByID(roomID int64) (*models.Room, error)
+}
+
+type Hub interface {
+	NewHub() *models.Hub
+	GetHub(roomID int64) (*models.Hub, error)
+	DeleteHub(roomID int64)
+	Register(roomID int64, hub *models.Hub)
+	ServeWS()
 }
