@@ -45,6 +45,11 @@ var (
 	ErrPostNotExist         = errors.New("there is no post with such id")
 	Posts                   = "Posts fetched"
 	Comments                = "Comments fetched"
+	AllChats                = "All chats fetched"
+	RoomMessages            = "Messages fetched by roomID"
+	Room                    = "Room ready for chat"
+	ErrRoomNotExist         = errors.New("there is no room with such id")
+	ErrHubNotFound          = errors.New("hub not found")
 )
 
 const (

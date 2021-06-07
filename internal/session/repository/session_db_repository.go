@@ -40,6 +40,7 @@ func (sr *SessionDBRepository) Insert(session *models.Session) error {
 		return err
 	}
 	if _, err = result.LastInsertId(); err != nil {
+		tx.Rollback()
 		return err
 	}
 	if err := tx.Commit(); err != nil {

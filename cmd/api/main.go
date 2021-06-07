@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/innovember/real-time-forum/internal/models"
 	"github.com/innovember/real-time-forum/internal/mwares"
 	userDelivery "github.com/innovember/real-time-forum/internal/user/delivery"
 	userRepo "github.com/innovember/real-time-forum/internal/user/repository"
@@ -25,6 +26,10 @@ import (
 	commentDelivery "github.com/innovember/real-time-forum/internal/comment/delivery"
 	commentRepo "github.com/innovember/real-time-forum/internal/comment/repository"
 	commentUsecase "github.com/innovember/real-time-forum/internal/comment/usecases"
+
+	chatDelivery "github.com/innovember/real-time-forum/internal/chat/delivery"
+	chatRepo "github.com/innovember/real-time-forum/internal/chat/repository"
+	chatUsecase "github.com/innovember/real-time-forum/internal/chat/usecases"
 
 	"github.com/innovember/real-time-forum/config"
 	"github.com/innovember/real-time-forum/pkg/database"
@@ -52,18 +57,23 @@ func main() {
 	if err := database.UploadSchemesToDB(dbConn, config.GetDBSchemesDir()); err != nil {
 		log.Fatal("upload schemes err: ", err)
 	}
-
+	hubs := models.NewRoomHubs()
 	userRepository := userRepo.NewUserDBRepository(dbConn)
 	sessionRepository := sessionRepo.NewSessionDBRepository(dbConn)
 	categoryRepository := categoryRepo.NewCategoryDBRepository(dbConn)
 	commentRepository := commentRepo.NewCommentDBRepository(dbConn, userRepository)
 	postRepository := postRepo.NewPostDBRepository(dbConn, userRepository, commentRepository)
+	roomRepository := chatRepo.NewRoomRepository(dbConn)
+
+	hubRepository := chatRepo.NewHubRepository(hubs)
 
 	userUsecase := userUsecase.NewUserUsecase(userRepository)
 	sessionUsecase := sessionUsecase.NewSessionUsecase(sessionRepository)
 	categoryUsecase := categoryUsecase.NewCategoryUsecase(categoryRepository)
 	postUsecase := postUsecase.NewPostUsecase(postRepository, categoryRepository)
 	commentUsecase := commentUsecase.NewCommentUsecase(commentRepository)
+	roomUsecase := chatUsecase.NewRoomUsecase(roomRepository)
+	hubUsecase := chatUsecase.NewHubUsecase(hubRepository, roomRepository)
 
 	go sessionUsecase.DeleteExpiredSessions()
 
@@ -84,6 +94,9 @@ func main() {
 
 	commentHandler := commentDelivery.NewCommentHandler(userUsecase, postUsecase, commentUsecase)
 	commentHandler.Configure(mux, mm)
+
+	chatHandler := chatDelivery.NewChatHandler(roomUsecase, sessionUsecase, hubUsecase)
+	chatHandler.Configure(mux, mm)
 
 	log.Println("Server is listening", config.GetLocalServerPath())
 	err = http.ListenAndServe(config.GetPort(), mux)

@@ -43,3 +43,9 @@ type InputGetPosts struct {
 	Limit      int      `json:"limit"`
 	LastPostID int      `json:"lastPostID"`
 }
+
+type InputRoom struct {
+	RoomID        int64 `json:"roomID"`
+	LastMessageID int64 `json:"lastMessageID"`
+	UserID        int64 `json:"userID"`
+}
