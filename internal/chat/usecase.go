@@ -1,6 +1,11 @@
 package chat
 
-import "github.com/innovember/real-time-forum/internal/models"
+import (
+	"net/http"
+
+	"github.com/gorilla/websocket"
+	"github.com/innovember/real-time-forum/internal/models"
+)
 
 type RoomUsecase interface {
 	CreateRoom(userID1, userID2 int64) (*models.Room, error)
@@ -15,10 +20,11 @@ type RoomUsecase interface {
 	GetRoomByID(roomID int64) (*models.Room, error)
 }
 
-type Hub interface {
+type HubUsecase interface {
 	NewHub() *models.Hub
 	GetHub(roomID int64) (*models.Hub, error)
 	DeleteHub(roomID int64)
 	Register(roomID int64, hub *models.Hub)
-	ServeWS()
+	NewClient(userID int64, hub *models.Hub, conn *websocket.Conn, send chan *models.Message) *models.Client
+	ServeWS(w http.ResponseWriter, r *http.Request, hub *models.Hub, userID, roomID int64)
 }

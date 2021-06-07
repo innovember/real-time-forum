@@ -24,10 +24,14 @@ func (ru *RoomUsecase) CreateRoom(userID1, userID2 int64) (*models.Room, error) 
 	return room, nil
 }
 
-func (ru *RoomUsecase) GetRoomByUsers(userID1, userID2 int64) (int64, error) {
-	room, err := ru.roomRepo.SelectRoomByUsers(userID1, userID2)
+func (ru *RoomUsecase) GetRoomByUsers(userID1, userID2 int64) (*models.Room, error) {
+	roomID, err := ru.roomRepo.SelectRoomByUsers(userID1, userID2)
 	if err != nil {
-		return 0, err
+		return nil, err
+	}
+	room, err := ru.roomRepo.SelectRoomByID(roomID)
+	if err != nil {
+		return nil, err
 	}
 	return room, nil
 }
