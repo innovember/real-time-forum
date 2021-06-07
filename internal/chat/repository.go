@@ -1,8 +1,6 @@
 package chat
 
-import (
-	"github.com/innovember/real-time-forum/internal/models"
-)
+import "github.com/innovember/real-time-forum/internal/models"
 
 type RoomRepository interface {
 	InsertRoom(userID1, userID2 int64) (*models.Room, error)

@@ -33,16 +33,16 @@ func (hr *HubRepository) GetHub(roomID int64) (*models.Hub, bool) {
 }
 
 func (hr *HubRepository) DeleteHub(roomID int64) {
-	hr.roomHubs.MU.Lock()
+	hr.roomHubs.Mu.Lock()
 	delete(hr.roomHubs.Hubs, roomID)
-	hr.roomHubs.MU.Unlock()
+	hr.roomHubs.Mu.Unlock()
 }
 
 func (hr *HubRepository) Register(roomID int64, hub *models.Hub) {
-	hr.roomHubs.MU.Lock()
+	hr.roomHubs.Mu.Lock()
 	_, ok := hr.roomHubs.Hubs[roomID]
 	if !ok {
 		hr.roomHubs.Hubs[roomID] = hub
 	}
-	hr.roomHubs.MU.Unlock()
+	hr.roomHubs.Mu.Unlock()
 }
