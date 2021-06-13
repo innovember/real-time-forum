@@ -156,7 +156,7 @@ func (ch *ChatHandler) HandlerWsSendMessage(w http.ResponseWriter, r *http.Reque
 			ch.hubUsecase.Register(room.ID, hub)
 		}
 		go hub.Run()
-		ch.hubUsecase.ServeWS(w, r, hub, session.UserID, room.ID)
+		ch.hubUsecase.ServeWS(w, r, hub, session.UserID)
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
 		return
