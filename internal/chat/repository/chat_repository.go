@@ -83,7 +83,7 @@ func (rr *RoomRepository) SelectRoomByUsers(userID1, userID2 int64) (int64, erro
 							WHERE user_id IN (?,?)
 							GROUP BY room_id
 							HAVING COUNT (*) > 1;
-						 `).Scan(
+						 `, userID1, userID2).Scan(
 		&roomID); err != nil {
 		tx.Rollback()
 		return 0, err
@@ -200,7 +200,7 @@ func (rr *RoomRepository) DeleteRoom(id int64) error {
 	return nil
 }
 
-func (rr *RoomRepository) InsertMessage(roomID int64, msg *models.Message) error {
+func (rr *RoomRepository) InsertMessage(msg *models.Message) error {
 	var (
 		ctx    context.Context
 		tx     *sql.Tx
@@ -213,7 +213,7 @@ func (rr *RoomRepository) InsertMessage(roomID int64, msg *models.Message) error
 	}
 	if result, err = tx.Exec(`INSERT INTO messages(room_id,author_id, message,message_date)
 								VALUES(?,?,?,?)`,
-		roomID,
+		msg.RoomID,
 		msg.User.ID,
 		msg.Content,
 		msg.MessageDate); err != nil {
@@ -256,7 +256,7 @@ func (rr *RoomRepository) SelectMessages(roomID int64, lastMessageID int64) ([]m
 	rows, err = tx.Query(`SELECT m.id, m.room_id, m.message, m.message_date,
 							u.id, u.nickname
 							FROM messages as m
-							LEFT JOIN users
+							LEFT JOIN users as u
 							ON m.author_id = u.id
 							WHERE m.room_id = $1
 							AND m.id < $2
@@ -304,7 +304,7 @@ func (rr *RoomRepository) SelectLastMessageDate(roomID int64) (int64, error) {
 							WHERE room_id = ?
 							ORDER BY message_date DESC
 							LIMIT 1
-						 `).Scan(
+						 `, roomID).Scan(
 		&lastMessageDate); err != nil {
 		tx.Rollback()
 		return 0, err
@@ -320,7 +320,7 @@ func (rr *RoomRepository) SelectRoomByID(roomID int64) (*models.Room, error) {
 		ctx  context.Context
 		tx   *sql.Tx
 		err  error
-		room *models.Room
+		room models.Room
 	)
 	ctx = context.Background()
 	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
@@ -336,5 +336,5 @@ func (rr *RoomRepository) SelectRoomByID(roomID int64) (*models.Room, error) {
 	if err = tx.Commit(); err != nil {
 		return nil, err
 	}
-	return room, nil
+	return &room, nil
 }

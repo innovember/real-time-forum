@@ -57,8 +57,8 @@ func (ru *RoomUsecase) GetAllRoomsByUserID(userID int64) ([]models.Room, error) 
 		if err != nil && err != consts.ErrNoData {
 			return nil, err
 		}
-		room.LastMessageDate, err = ru.roomRepo.SelectLastMessageDate(room.ID)
-		if err != nil {
+		room.LastMessageDate, err = ru.GetLastMessageDate(room.ID)
+		if err != nil && err != consts.ErrNoData {
 			return nil, err
 		}
 		rooms = append(rooms, room)
@@ -74,8 +74,8 @@ func (ru *RoomUsecase) DeleteRoom(id int64) error {
 	return nil
 }
 
-func (ru *RoomUsecase) CreateMessage(roomID int64, msg *models.Message) error {
-	err := ru.roomRepo.InsertMessage(roomID, msg)
+func (ru *RoomUsecase) CreateMessage(msg *models.Message) error {
+	err := ru.roomRepo.InsertMessage(msg)
 	if err != nil {
 		return err
 	}
