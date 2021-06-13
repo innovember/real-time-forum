@@ -72,7 +72,7 @@ func (hu *HubUsecase) NewClient(userID int64, hub *models.Hub, conn *websocket.C
 	}
 }
 
-func (hu *HubUsecase) ServeWS(w http.ResponseWriter, r *http.Request, hub *models.Hub, userID, roomID int64) {
+func (hu *HubUsecase) ServeWS(w http.ResponseWriter, r *http.Request, hub *models.Hub, userID int64) {
 	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -82,7 +82,7 @@ func (hu *HubUsecase) ServeWS(w http.ResponseWriter, r *http.Request, hub *model
 	client.Hub.Register <- client
 
 	go hu.WritePump(client)
-	go hu.ReadPump(client, userID, roomID)
+	go hu.ReadPump(client, userID)
 }
 
 func (hu *HubUsecase) writeJSON(c *models.Client, data interface{}) error {
@@ -126,7 +126,7 @@ func (hu *HubUsecase) WritePump(c *models.Client) {
 	}()
 }
 
-func (hu *HubUsecase) ReadPump(c *models.Client, userID, roomID int64) {
+func (hu *HubUsecase) ReadPump(c *models.Client, userID int64) {
 	go func() {
 		defer func() {
 			c.Hub.Unregister <- c
@@ -149,7 +149,7 @@ func (hu *HubUsecase) ReadPump(c *models.Client, userID, roomID int64) {
 			}
 			msg := &models.Message{}
 			json.Unmarshal(messageBytes, msg)
-			if err := hu.roomRepo.InsertMessage(roomID, msg); err != nil {
+			if err := hu.roomRepo.InsertMessage(msg); err != nil {
 				log.Println("cant save message ,error: ", err)
 				continue
 			}
