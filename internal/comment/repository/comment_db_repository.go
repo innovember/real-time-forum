@@ -99,10 +99,12 @@ func (cr *CommentDBRepository) SelectCommentsByPostID(input *models.InputGetComm
 		SELECT *
 		FROM comments
 		WHERE id < ?
+                AND post_id = ?
 		ORDER BY created_at DESC
 		LIMIT ?
 		`,
 		input.LastCommentID,
+                input.PostID,
 		input.Limit); err != nil {
 		tx.Rollback()
 		return nil, err
