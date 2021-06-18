@@ -75,6 +75,7 @@ func (ch *CommentHandler) HandlerCreateComment(w http.ResponseWriter, r *http.Re
 		}
 		comment := models.Comment{
 			AuthorID: user.ID,
+			PostID:   input.PostID,
 			Content:  input.Content,
 		}
 		err = ch.commentUcase.Create(&comment)
