@@ -72,7 +72,7 @@ func main() {
 	categoryUsecase := categoryUsecase.NewCategoryUsecase(categoryRepository)
 	postUsecase := postUsecase.NewPostUsecase(postRepository, categoryRepository)
 	commentUsecase := commentUsecase.NewCommentUsecase(commentRepository)
-	roomUsecase := chatUsecase.NewRoomUsecase(roomRepository)
+	roomUsecase := chatUsecase.NewRoomUsecase(roomRepository, userRepository)
 	hubUsecase := chatUsecase.NewHubUsecase(hubRepository, roomRepository)
 
 	go sessionUsecase.DeleteExpiredSessions()

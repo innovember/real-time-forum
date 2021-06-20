@@ -4,15 +4,19 @@ import (
 	"github.com/innovember/real-time-forum/internal/chat"
 	"github.com/innovember/real-time-forum/internal/consts"
 	"github.com/innovember/real-time-forum/internal/models"
+	"github.com/innovember/real-time-forum/internal/user"
 )
 
 type RoomUsecase struct {
 	roomRepo chat.RoomRepository
+	userRepo user.UserRepository
 }
 
-func NewRoomUsecase(roomRepo chat.RoomRepository) *RoomUsecase {
+func NewRoomUsecase(roomRepo chat.RoomRepository,
+	userRepo user.UserRepository) *RoomUsecase {
 	return &RoomUsecase{
 		roomRepo: roomRepo,
+		userRepo: userRepo,
 	}
 }
 
@@ -33,6 +37,11 @@ func (ru *RoomUsecase) GetRoomByUsers(userID1, userID2 int64) (*models.Room, err
 	if err != nil {
 		return nil, err
 	}
+	user, err := ru.userRepo.SelectByID(userID2)
+	if err != nil {
+		return nil, err
+	}
+	room.User = user
 	return room, nil
 }
 
