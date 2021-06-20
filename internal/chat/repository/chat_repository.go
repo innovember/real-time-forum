@@ -148,7 +148,8 @@ func (rr *RoomRepository) SelectAllUsers(userID int64) ([]*models.User, error) {
 	}
 	rows, err = tx.Query(`SELECT id, nickname
 	 FROM users
-	  WHERE id != ?`, userID)
+	  WHERE id != ?
+	  ORDER BY nickname ASC`, userID)
 	if err != nil {
 		tx.Rollback()
 		return nil, err

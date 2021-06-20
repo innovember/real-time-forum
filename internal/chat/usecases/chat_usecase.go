@@ -54,8 +54,13 @@ func (ru *RoomUsecase) GetAllRoomsByUserID(userID int64) ([]models.Room, error) 
 		var room models.Room
 		room.User = user
 		room.ID, err = ru.roomRepo.SelectRoomByUsers(userID, user.ID)
-		if err != nil && err != consts.ErrNoData {
-			return nil, err
+		if err != nil {
+			switch err {
+			case consts.ErrNoData:
+				continue
+			default:
+				return nil, err
+			}
 		}
 		room.LastMessageDate, err = ru.GetLastMessageDate(room.ID)
 		if err != nil && err != consts.ErrNoData {
