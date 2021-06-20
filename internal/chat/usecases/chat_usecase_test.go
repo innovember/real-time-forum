@@ -9,6 +9,7 @@ import (
 	repo "github.com/innovember/real-time-forum/internal/chat/repository"
 	usecase "github.com/innovember/real-time-forum/internal/chat/usecases"
 	"github.com/innovember/real-time-forum/internal/models"
+	userRepo "github.com/innovember/real-time-forum/internal/user/repository"
 	"github.com/innovember/real-time-forum/pkg/database"
 )
 
@@ -30,7 +31,8 @@ func setupChatUsecases() (*usecase.RoomUsecase, *usecase.HubUsecase) {
 	hubs := models.NewRoomHubs()
 	roomRepository := repo.NewRoomRepository(dbConn)
 	hubRepository := repo.NewHubRepository(hubs)
-	roomUsecase := usecase.NewRoomUsecase(roomRepository)
+	userRepository := userRepo.NewUserDBRepository(dbConn)
+	roomUsecase := usecase.NewRoomUsecase(roomRepository, userRepository)
 	hubUsecase := usecase.NewHubUsecase(hubRepository, roomRepository)
 	return roomUsecase, hubUsecase
 }
