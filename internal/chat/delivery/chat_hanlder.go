@@ -33,7 +33,7 @@ func (ch *ChatHandler) Configure(mux *http.ServeMux, mm *mwares.MiddlewareManage
 	mux.HandleFunc("/api/v1/chats", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetChats)))
 	mux.HandleFunc("/api/v1/room", mm.CORSConfig(mm.CheckCSRF(mm.CheckAuth(ch.HandlerGetRoom))))
 	mux.HandleFunc("/api/v1/messages", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetMessages)))
-	mux.HandleFunc("/api/v1/message/", mm.CORSConfig(mm.CheckCSRF(mm.CheckAuth(ch.HandlerWsSendMessage))))
+	mux.HandleFunc("/api/v1/message/", mm.CheckCSRF(mm.CheckAuth(ch.HandlerWsSendMessage)))
 	mux.HandleFunc("/api/v1/chats/users", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetUsers)))
 }
 
@@ -105,7 +105,7 @@ func (ch *ChatHandler) HandlerGetMessages(w http.ResponseWriter, r *http.Request
 			input models.InputRoom
 		)
 		cookie, _ := r.Cookie(consts.SessionName)
-		_, err := ch.sessionUcase.GetByToken(cookie.Value)
+		session, err := ch.sessionUcase.GetByToken(cookie.Value)
 		if err != nil {
 			response.JSON(w, false, http.StatusUnauthorized, consts.ErrInvalidSessionToken.Error(), nil)
 			return
@@ -114,7 +114,7 @@ func (ch *ChatHandler) HandlerGetMessages(w http.ResponseWriter, r *http.Request
 			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
 			return
 		}
-		messages, err := ch.roomUsecase.GetMessages(input.RoomID, input.LastMessageID)
+		messages, err := ch.roomUsecase.GetMessages(input.RoomID, input.LastMessageID, session.UserID)
 		if err != nil {
 			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
 			return
