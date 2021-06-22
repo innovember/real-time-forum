@@ -88,7 +88,7 @@ func TestCreateMessage(t *testing.T) {
 
 func TestGetMessages(t *testing.T) {
 	roomUsecase, _ := setupChatUsecases()
-	messages, err := roomUsecase.GetMessages(2, 0)
+	messages, err := roomUsecase.GetMessages(2, 0, 1)
 	if err != nil {
 		t.Error("portion msg err: ", err)
 	}

@@ -96,10 +96,15 @@ func (ru *RoomUsecase) CreateMessage(msg *models.Message) error {
 	return nil
 }
 
-func (ru *RoomUsecase) GetMessages(roomID int64, lastMessageID int64) ([]models.Message, error) {
+func (ru *RoomUsecase) GetMessages(roomID, lastMessageID, userID int64) ([]models.Message, error) {
 	messages, err := ru.roomRepo.SelectMessages(roomID, lastMessageID)
 	if err != nil {
 		return nil, err
+	}
+	for _, message := range messages {
+		if message.User.ID == userID {
+			message.IsYourMessage = true
+		}
 	}
 	return messages, nil
 }
