@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/innovember/real-time-forum/internal/chat"
 	"github.com/innovember/real-time-forum/internal/consts"
+	"github.com/innovember/real-time-forum/internal/helpers"
 	"github.com/innovember/real-time-forum/internal/models"
 )
 
@@ -82,7 +83,7 @@ func (hu *HubUsecase) ServeWS(w http.ResponseWriter, r *http.Request, hub *model
 	client.Hub.Register <- client
 
 	go hu.WritePump(client)
-	go hu.ReadPump(client, userID)
+	go hu.ReadPump(client)
 }
 
 func (hu *HubUsecase) writeJSON(c *models.Client, data interface{}) error {
@@ -126,7 +127,7 @@ func (hu *HubUsecase) WritePump(c *models.Client) {
 	}()
 }
 
-func (hu *HubUsecase) ReadPump(c *models.Client, userID int64) {
+func (hu *HubUsecase) ReadPump(c *models.Client) {
 	go func() {
 		defer func() {
 			c.Hub.Unregister <- c
@@ -147,14 +148,16 @@ func (hu *HubUsecase) ReadPump(c *models.Client, userID int64) {
 				}
 				break
 			}
-			msg := &models.Message{}
-			json.Unmarshal(messageBytes, msg)
-			if err := hu.roomRepo.InsertMessage(msg); err != nil {
-				log.Println("cant save message ,error: ", err)
+			msg := models.Message{}
+			json.Unmarshal(messageBytes, &msg)
+			msg.User.ID = c.UserID
+			msg.MessageDate = helpers.GetCurrentUnixTime()
+			if err := hu.roomRepo.InsertMessage(&msg); err != nil {
+				log.Println("insert message err ,error: ", err)
 				continue
 			}
 			hu.writeJSON(c, msg)
-			c.Hub.Broadcast <- msg
+			c.Hub.Broadcast <- &msg
 		}
 	}()
 }
