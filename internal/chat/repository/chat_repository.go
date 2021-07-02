@@ -201,7 +201,7 @@ func (rr *RoomRepository) DeleteRoom(id int64) error {
 	return nil
 }
 
-func (rr *RoomRepository) InsertMessage(msg *models.Message) error {
+func (rr *RoomRepository) InsertMessage(msg *models.Message) (*models.Message, error) {
 	var (
 		ctx    context.Context
 		tx     *sql.Tx
@@ -210,7 +210,7 @@ func (rr *RoomRepository) InsertMessage(msg *models.Message) error {
 	)
 	ctx = context.Background()
 	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
-		return err
+		return nil, err
 	}
 	if result, err = tx.Exec(`INSERT INTO messages(room_id,author_id, message,message_date)
 								VALUES(?,?,?,?)`,
@@ -219,16 +219,16 @@ func (rr *RoomRepository) InsertMessage(msg *models.Message) error {
 		msg.Content,
 		msg.MessageDate); err != nil {
 		tx.Rollback()
-		return err
+		return nil, err
 	}
-	if _, err = result.LastInsertId(); err != nil {
+	if msg.ID, err = result.LastInsertId(); err != nil {
 		tx.Rollback()
-		return err
+		return nil, err
 	}
 	if err := tx.Commit(); err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return msg, nil
 }
 
 func (rr *RoomRepository) SelectMessages(roomID int64, lastMessageID int64) ([]models.Message, error) {
