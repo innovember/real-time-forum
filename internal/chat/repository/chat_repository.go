@@ -275,7 +275,7 @@ func (rr *RoomRepository) SelectMessages(roomID int64, lastMessageID int64) ([]m
 			u models.User
 		)
 		rows.Scan(&m.ID, &m.RoomID, &m.Content, &m.MessageDate,
-			&u.ID, &u.Nickname)
+			&m.Read, &u.ID, &u.Nickname)
 		m.User = &u
 		messages = append(messages, m)
 	}
@@ -338,4 +338,73 @@ func (rr *RoomRepository) SelectRoomByID(roomID int64) (*models.Room, error) {
 		return nil, err
 	}
 	return &room, nil
+}
+
+func (rr *RoomRepository) SelectUnReadMessages(roomID int64) (int64, error) {
+	var (
+		ctx   context.Context
+		tx    *sql.Tx
+		err   error
+		total int64
+	)
+	ctx = context.Background()
+	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return 0, err
+	}
+	if err = tx.QueryRow(`SELECT count(id) AS total
+	 					FROM messages
+						 WHERE room_id = ?
+						 AND read = 0;
+						 `, roomID).Scan(
+		&total); err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+	return total, nil
+}
+
+func (rr *RoomRepository) UpdateMessageStatus(roomID, messageID int64) error {
+	var (
+		ctx context.Context
+		tx  *sql.Tx
+		err error
+	)
+	ctx = context.Background()
+	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(`UPDATE messages
+						 SET read = 1
+						 WHERE room_id = ?
+						 AND id = ?`, roomID, messageID); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (rr *RoomRepository) UpdateMessagesStatusForReceiver(roomID, userID int64) error {
+	var (
+		ctx context.Context
+		tx  *sql.Tx
+		err error
+	)
+	ctx = context.Background()
+	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(`UPDATE messages
+						 SET read = 1
+						 WHERE room_id = ?
+						 AND author_id = ?`, roomID, userID); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
 }
