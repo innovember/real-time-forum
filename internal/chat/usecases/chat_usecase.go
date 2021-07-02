@@ -3,6 +3,7 @@ package usecases
 import (
 	"github.com/innovember/real-time-forum/internal/chat"
 	"github.com/innovember/real-time-forum/internal/consts"
+	"github.com/innovember/real-time-forum/internal/helpers"
 	"github.com/innovember/real-time-forum/internal/models"
 	"github.com/innovember/real-time-forum/internal/user"
 )
@@ -130,4 +131,33 @@ func (ru *RoomUsecase) GetRoomByID(roomID int64) (*models.Room, error) {
 		return nil, err
 	}
 	return room, nil
+}
+
+func (ru *RoomUsecase) GetUnReadMessages(roomID int64) (int64, error) {
+	unreadMsgNumber, err := ru.roomRepo.SelectUnReadMessages(roomID)
+	if err != nil {
+		return 0, err
+	}
+	return unreadMsgNumber, nil
+}
+
+func (ru *RoomUsecase) UpdateMessageStatus(roomID, messageID int64) error {
+	err := ru.roomRepo.UpdateMessageStatus(roomID, messageID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ru *RoomUsecase) UpdateMessagesStatusForReceiver(roomID, userID int64) error {
+	users, err := ru.GetUsersByRoom(roomID)
+	if err != nil {
+		return err
+	}
+	authorID := helpers.SelectSecondUser(users, userID)
+	err = ru.roomRepo.UpdateMessagesStatusForReceiver(roomID, authorID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

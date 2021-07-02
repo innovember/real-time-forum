@@ -18,6 +18,9 @@ type RoomUsecase interface {
 	GetLastMessageDate(roomID int64) (int64, error)
 	GetAllUsers(userID int64) ([]*models.User, error)
 	GetRoomByID(roomID int64) (*models.Room, error)
+	GetUnReadMessages(roomID int64) (int64, error)
+	UpdateMessageStatus(roomID, messageID int64) error
+	UpdateMessagesStatusForReceiver(roomID, userID int64) error
 }
 
 type HubUsecase interface {
