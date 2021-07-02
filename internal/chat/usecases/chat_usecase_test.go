@@ -80,10 +80,11 @@ func TestCreateMessage(t *testing.T) {
 		MessageDate: 1630430430430,
 		User:        &models.User{ID: 1},
 	}
-	err := roomUsecase.CreateMessage(msg)
+	message, err := roomUsecase.CreateMessage(msg)
 	if err != nil {
 		t.Error("create msg err: ", err)
 	}
+	fmt.Printf("message: %+v\n", message)
 }
 
 func TestGetMessages(t *testing.T) {
@@ -120,4 +121,29 @@ func TestGetRoomByID(t *testing.T) {
 		t.Error("get room by ID err: ", err)
 	}
 	fmt.Println(room)
+}
+
+func TestGetUnReadMessages(t *testing.T) {
+	roomUsecase, _ := setupChatUsecases()
+	unreadMsgNum, err := roomUsecase.GetUnReadMessages(1)
+	if err != nil {
+		t.Error("unread msg num err: ", err)
+	}
+	fmt.Println(unreadMsgNum)
+}
+
+func TestUpdateMessageStatus(t *testing.T) {
+	roomUsecase, _ := setupChatUsecases()
+	err := roomUsecase.UpdateMessageStatus(1, 1)
+	if err != nil {
+		t.Error("update message status err: ", err)
+	}
+}
+
+func TestUpdateMessagesStatusForReceiver(t *testing.T) {
+	roomUsecase, _ := setupChatUsecases()
+	err := roomUsecase.UpdateMessagesStatusForReceiver(1, 2)
+	if err != nil {
+		t.Error("update messages status err: ", err)
+	}
 }

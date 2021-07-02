@@ -89,12 +89,12 @@ func (ru *RoomUsecase) DeleteRoom(id int64) error {
 	return nil
 }
 
-func (ru *RoomUsecase) CreateMessage(msg *models.Message) error {
-	err := ru.roomRepo.InsertMessage(msg)
+func (ru *RoomUsecase) CreateMessage(msg *models.Message) (*models.Message, error) {
+	message, err := ru.roomRepo.InsertMessage(msg)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return message, nil
 }
 
 func (ru *RoomUsecase) GetMessages(roomID, lastMessageID, userID int64) ([]models.Message, error) {

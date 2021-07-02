@@ -148,16 +148,17 @@ func (hu *HubUsecase) ReadPump(c *models.Client) {
 				}
 				break
 			}
-			msg := models.Message{}
-			json.Unmarshal(messageBytes, &msg)
-			msg.User.ID = c.UserID
-			msg.MessageDate = helpers.GetCurrentUnixTime()
-			if err := hu.roomRepo.InsertMessage(&msg); err != nil {
+			inputMsg := models.Message{}
+			json.Unmarshal(messageBytes, &inputMsg)
+			inputMsg.User.ID = c.UserID
+			inputMsg.MessageDate = helpers.GetCurrentUnixTime()
+			outputMessage, err := hu.roomRepo.InsertMessage(&inputMsg)
+			if err != nil {
 				log.Println("insert message err ,error: ", err)
 				continue
 			}
-			hu.writeJSON(c, msg)
-			c.Hub.Broadcast <- &msg
+			hu.writeJSON(c, outputMessage)
+			c.Hub.Broadcast <- outputMessage
 		}
 	}()
 }
