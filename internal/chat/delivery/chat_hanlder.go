@@ -35,6 +35,8 @@ func (ch *ChatHandler) Configure(mux *http.ServeMux, mm *mwares.MiddlewareManage
 	mux.HandleFunc("/api/v1/messages", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetMessages)))
 	mux.HandleFunc("/api/v1/message/", mm.CheckCSRF(mm.CheckAuth(ch.HandlerWsSendMessage)))
 	mux.HandleFunc("/api/v1/chats/users", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetUsers)))
+	mux.HandleFunc("/api/v1/room/message", mm.CORSConfig(mm.CheckAuth(ch.HandlerUpdateMessageStatus)))
+	mux.HandleFunc("/api/v1/room/messages", mm.CORSConfig(mm.CheckAuth(ch.HandlerUpdateMessagesStatus)))
 }
 
 func (ch *ChatHandler) HandlerGetChats(w http.ResponseWriter, r *http.Request) {
@@ -181,6 +183,64 @@ func (ch *ChatHandler) HandlerGetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
+		return
+	}
+}
+
+func (ch *ChatHandler) HandlerUpdateMessageStatus(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPut:
+		var (
+			input models.InputRoom
+		)
+		cookie, _ := r.Cookie(consts.SessionName)
+		_, err := ch.sessionUcase.GetByToken(cookie.Value)
+		if err != nil {
+			response.JSON(w, false, http.StatusUnauthorized, consts.ErrInvalidSessionToken.Error(), nil)
+			return
+		}
+		if err = json.NewDecoder(r.Body).Decode(&input); err != nil {
+			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
+			return
+		}
+		err = ch.roomUsecase.UpdateMessageStatus(input.RoomID, input.MessageID)
+		if err != nil {
+			response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
+		response.JSON(w, true, http.StatusOK, consts.MessageStatusUpdated, nil)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPUT.Error(), nil)
+		return
+	}
+}
+
+func (ch *ChatHandler) HandlerUpdateMessagesStatus(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPut:
+		var (
+			input models.InputRoom
+		)
+		cookie, _ := r.Cookie(consts.SessionName)
+		session, err := ch.sessionUcase.GetByToken(cookie.Value)
+		if err != nil {
+			response.JSON(w, false, http.StatusUnauthorized, consts.ErrInvalidSessionToken.Error(), nil)
+			return
+		}
+		if err = json.NewDecoder(r.Body).Decode(&input); err != nil {
+			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
+			return
+		}
+		err = ch.roomUsecase.UpdateMessagesStatusForReceiver(input.RoomID, session.UserID)
+		if err != nil {
+			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
+			return
+		}
+		response.JSON(w, true, http.StatusOK, consts.MessagesStatusUpdated, nil)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPUT.Error(), nil)
 		return
 	}
 }
