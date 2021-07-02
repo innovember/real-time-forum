@@ -46,6 +46,7 @@ type InputGetPosts struct {
 
 type InputRoom struct {
 	RoomID        int64 `json:"roomID"`
-	LastMessageID int64 `json:"lastMessageID"`
 	UserID        int64 `json:"userID"`
+	MessageID     int64 `json:"messageID"`
+	LastMessageID int64 `json:"lastMessageID"`
 }
