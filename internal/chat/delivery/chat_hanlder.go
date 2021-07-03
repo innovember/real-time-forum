@@ -33,7 +33,7 @@ func (ch *ChatHandler) Configure(mux *http.ServeMux, mm *mwares.MiddlewareManage
 	mux.HandleFunc("/api/v1/chats", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetChats)))
 	mux.HandleFunc("/api/v1/room", mm.CORSConfig(mm.CheckCSRF(mm.CheckAuth(ch.HandlerGetRoom))))
 	mux.HandleFunc("/api/v1/messages", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetMessages)))
-	mux.HandleFunc("/api/v1/message/", mm.CheckCSRF(mm.CheckAuth(ch.HandlerWsSendMessage)))
+	mux.HandleFunc("/api/v1/message/", mm.CheckAuth(ch.HandlerWsSendMessage))
 	mux.HandleFunc("/api/v1/chats/users", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetUsers)))
 	mux.HandleFunc("/api/v1/room/message", mm.CORSConfig(mm.CheckAuth(ch.HandlerUpdateMessageStatus)))
 	mux.HandleFunc("/api/v1/room/messages", mm.CORSConfig(mm.CheckAuth(ch.HandlerUpdateMessagesStatus)))
@@ -149,7 +149,7 @@ func (ch *ChatHandler) HandlerWsSendMessage(w http.ResponseWriter, r *http.Reque
 		}
 		room, err := ch.roomUsecase.GetRoomByID(int64(roomID))
 		if err != nil {
-			response.JSON(w, false, http.StatusBadRequest, consts.ErrRoomNotExist.Error(), nil)
+			response.JSON(w, false, http.StatusNotFound, consts.ErrRoomNotExist.Error(), nil)
 			return
 		}
 		hub, err = ch.hubUsecase.GetHub(room.ID)
