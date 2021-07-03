@@ -53,6 +53,10 @@ func (ru *RoomUsecase) GetRoomByUsers(userID1, userID2 int64) (*models.Room, err
 	} else {
 		room.Read = true
 	}
+	room.LastMessageDate, err = ru.GetLastMessageDate(room.ID)
+	if err != nil && err != consts.ErrNoData {
+		return nil, err
+	}
 	return room, nil
 }
 

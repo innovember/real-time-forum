@@ -158,6 +158,11 @@ func (hu *HubUsecase) ReadPump(c *models.Client) {
 				log.Println("insert message err ,error: ", err)
 				continue
 			}
+			outputMessage.HTTPCode = 200
+			outputMessage.State = true
+			if outputMessage.User.ID == c.UserID {
+				outputMessage.IsYourMessage = true
+			}
 			hu.writeJSON(c, outputMessage)
 			c.Hub.Broadcast <- outputMessage
 		}
