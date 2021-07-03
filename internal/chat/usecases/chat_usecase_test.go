@@ -47,11 +47,11 @@ func TestCreateRoom(t *testing.T) {
 
 func TestGetRoomByUsers(t *testing.T) {
 	roomUsecase, _ := setupChatUsecases()
-	room, err := roomUsecase.GetRoomByUsers(1, 3)
+	room, err := roomUsecase.GetRoomByUsers(2, 3)
 	if err != nil {
 		t.Error("get room err ", err)
 	}
-	fmt.Println(room)
+	fmt.Printf("%+v,\n User: %+v\n", room, room.User)
 }
 
 func TestGetUsersByRoom(t *testing.T) {

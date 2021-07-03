@@ -1,6 +1,8 @@
 package usecases
 
 import (
+	"sort"
+
 	"github.com/innovember/real-time-forum/internal/chat"
 	"github.com/innovember/real-time-forum/internal/consts"
 	"github.com/innovember/real-time-forum/internal/helpers"
@@ -101,6 +103,9 @@ func (ru *RoomUsecase) GetAllRoomsByUserID(userID int64) ([]models.Room, error) 
 		}
 		rooms = append(rooms, room)
 	}
+	sort.SliceStable(rooms, func(i, j int) bool {
+		return rooms[i].LastMessageDate > rooms[j].LastMessageDate
+	})
 	return rooms, nil
 }
 

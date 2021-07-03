@@ -16,3 +16,6 @@
 
 # database
 database/forum.db
+
+# build files
+build
