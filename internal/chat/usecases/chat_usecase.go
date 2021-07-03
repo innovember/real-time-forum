@@ -44,6 +44,15 @@ func (ru *RoomUsecase) GetRoomByUsers(userID1, userID2 int64) (*models.Room, err
 		return nil, err
 	}
 	room.User = user
+	room.UnreadMsgNumber, err = ru.GetUnReadMessages(room.ID)
+	if err != nil && err != consts.ErrNoData {
+		return nil, err
+	}
+	if room.UnreadMsgNumber != 0 {
+		room.Read = false
+	} else {
+		room.Read = true
+	}
 	return room, nil
 }
 
