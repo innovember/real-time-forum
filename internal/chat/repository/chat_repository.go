@@ -360,6 +360,9 @@ func (rr *RoomRepository) SelectUnReadMessages(roomID int64) (int64, error) {
 		tx.Rollback()
 		return 0, err
 	}
+	if err = tx.Commit(); err != nil {
+		return 0, err
+	}
 	return total, nil
 }
 

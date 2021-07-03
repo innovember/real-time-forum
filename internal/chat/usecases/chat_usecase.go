@@ -26,6 +26,7 @@ func (ru *RoomUsecase) CreateRoom(userID1, userID2 int64) (*models.Room, error) 
 	if err != nil {
 		return nil, err
 	}
+	room.Read = true
 	return room, nil
 }
 
@@ -75,6 +76,15 @@ func (ru *RoomUsecase) GetAllRoomsByUserID(userID int64) ([]models.Room, error) 
 		room.LastMessageDate, err = ru.GetLastMessageDate(room.ID)
 		if err != nil && err != consts.ErrNoData {
 			return nil, err
+		}
+		room.UnreadMsgNumber, err = ru.GetUnReadMessages(room.ID)
+		if err != nil && err != consts.ErrNoData {
+			return nil, err
+		}
+		if room.UnreadMsgNumber != 0 {
+			room.Read = false
+		} else {
+			room.Read = true
 		}
 		rooms = append(rooms, room)
 	}
