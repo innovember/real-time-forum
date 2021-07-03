@@ -33,8 +33,10 @@ func (ch *ChatHandler) Configure(mux *http.ServeMux, mm *mwares.MiddlewareManage
 	mux.HandleFunc("/api/v1/chats", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetChats)))
 	mux.HandleFunc("/api/v1/room", mm.CORSConfig(mm.CheckCSRF(mm.CheckAuth(ch.HandlerGetRoom))))
 	mux.HandleFunc("/api/v1/messages", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetMessages)))
-	mux.HandleFunc("/api/v1/message/", mm.CORSConfig(mm.CheckCSRF(mm.CheckAuth(ch.HandlerWsSendMessage))))
+	mux.HandleFunc("/api/v1/message/", mm.CheckAuth(ch.HandlerWsSendMessage))
 	mux.HandleFunc("/api/v1/chats/users", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetUsers)))
+	mux.HandleFunc("/api/v1/room/message", mm.CORSConfig(mm.CheckAuth(ch.HandlerUpdateMessageStatus)))
+	mux.HandleFunc("/api/v1/room/messages", mm.CORSConfig(mm.CheckAuth(ch.HandlerUpdateMessagesStatus)))
 }
 
 func (ch *ChatHandler) HandlerGetChats(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +78,10 @@ func (ch *ChatHandler) HandlerGetRoom(w http.ResponseWriter, r *http.Request) {
 			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
 			return
 		}
+		if session.UserID == input.UserID {
+			response.JSON(w, false, http.StatusBadRequest, consts.ErrSelfChat.Error(), nil)
+			return
+		}
 		room, err = ch.roomUsecase.GetRoomByUsers(session.UserID, input.UserID)
 		if err != nil {
 			switch err {
@@ -89,8 +95,10 @@ func (ch *ChatHandler) HandlerGetRoom(w http.ResponseWriter, r *http.Request) {
 				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
 				return
 			}
+			response.JSON(w, true, http.StatusCreated, consts.Room, room)
+			return
 		}
-		response.JSON(w, true, http.StatusCreated, consts.Room, room)
+		response.JSON(w, true, http.StatusOK, consts.Room, room)
 		return
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPOST.Error(), nil)
@@ -105,7 +113,7 @@ func (ch *ChatHandler) HandlerGetMessages(w http.ResponseWriter, r *http.Request
 			input models.InputRoom
 		)
 		cookie, _ := r.Cookie(consts.SessionName)
-		_, err := ch.sessionUcase.GetByToken(cookie.Value)
+		session, err := ch.sessionUcase.GetByToken(cookie.Value)
 		if err != nil {
 			response.JSON(w, false, http.StatusUnauthorized, consts.ErrInvalidSessionToken.Error(), nil)
 			return
@@ -114,7 +122,7 @@ func (ch *ChatHandler) HandlerGetMessages(w http.ResponseWriter, r *http.Request
 			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
 			return
 		}
-		messages, err := ch.roomUsecase.GetMessages(input.RoomID, input.LastMessageID)
+		messages, err := ch.roomUsecase.GetMessages(input.RoomID, input.LastMessageID, session.UserID)
 		if err != nil {
 			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
 			return
@@ -147,7 +155,7 @@ func (ch *ChatHandler) HandlerWsSendMessage(w http.ResponseWriter, r *http.Reque
 		}
 		room, err := ch.roomUsecase.GetRoomByID(int64(roomID))
 		if err != nil {
-			response.JSON(w, false, http.StatusBadRequest, consts.ErrRoomNotExist.Error(), nil)
+			response.JSON(w, false, http.StatusNotFound, consts.ErrRoomNotExist.Error(), nil)
 			return
 		}
 		hub, err = ch.hubUsecase.GetHub(room.ID)
@@ -156,7 +164,7 @@ func (ch *ChatHandler) HandlerWsSendMessage(w http.ResponseWriter, r *http.Reque
 			ch.hubUsecase.Register(room.ID, hub)
 		}
 		go hub.Run()
-		ch.hubUsecase.ServeWS(w, r, hub, session.UserID)
+		ch.hubUsecase.ServeWS(w, r, hub, room.ID, session.UserID)
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
 		return
@@ -181,6 +189,64 @@ func (ch *ChatHandler) HandlerGetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
+		return
+	}
+}
+
+func (ch *ChatHandler) HandlerUpdateMessageStatus(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPut:
+		var (
+			input models.InputRoom
+		)
+		cookie, _ := r.Cookie(consts.SessionName)
+		_, err := ch.sessionUcase.GetByToken(cookie.Value)
+		if err != nil {
+			response.JSON(w, false, http.StatusUnauthorized, consts.ErrInvalidSessionToken.Error(), nil)
+			return
+		}
+		if err = json.NewDecoder(r.Body).Decode(&input); err != nil {
+			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
+			return
+		}
+		err = ch.roomUsecase.UpdateMessageStatus(input.RoomID, input.MessageID)
+		if err != nil {
+			response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
+		response.JSON(w, true, http.StatusOK, consts.MessageStatusUpdated, nil)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPUT.Error(), nil)
+		return
+	}
+}
+
+func (ch *ChatHandler) HandlerUpdateMessagesStatus(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPut:
+		var (
+			input models.InputRoom
+		)
+		cookie, _ := r.Cookie(consts.SessionName)
+		session, err := ch.sessionUcase.GetByToken(cookie.Value)
+		if err != nil {
+			response.JSON(w, false, http.StatusUnauthorized, consts.ErrInvalidSessionToken.Error(), nil)
+			return
+		}
+		if err = json.NewDecoder(r.Body).Decode(&input); err != nil {
+			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
+			return
+		}
+		err = ch.roomUsecase.UpdateMessagesStatusForReceiver(input.RoomID, session.UserID)
+		if err != nil {
+			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
+			return
+		}
+		response.JSON(w, true, http.StatusOK, consts.MessagesStatusUpdated, nil)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPUT.Error(), nil)
 		return
 	}
 }

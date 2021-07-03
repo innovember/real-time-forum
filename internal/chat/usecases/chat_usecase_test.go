@@ -47,11 +47,11 @@ func TestCreateRoom(t *testing.T) {
 
 func TestGetRoomByUsers(t *testing.T) {
 	roomUsecase, _ := setupChatUsecases()
-	room, err := roomUsecase.GetRoomByUsers(1, 3)
+	room, err := roomUsecase.GetRoomByUsers(2, 3)
 	if err != nil {
 		t.Error("get room err ", err)
 	}
-	fmt.Println(room)
+	fmt.Printf("%+v,\n User: %+v\n", room, room.User)
 }
 
 func TestGetUsersByRoom(t *testing.T) {
@@ -80,15 +80,16 @@ func TestCreateMessage(t *testing.T) {
 		MessageDate: 1630430430430,
 		User:        &models.User{ID: 1},
 	}
-	err := roomUsecase.CreateMessage(msg)
+	message, err := roomUsecase.CreateMessage(msg)
 	if err != nil {
 		t.Error("create msg err: ", err)
 	}
+	fmt.Printf("message: %+v\n", message)
 }
 
 func TestGetMessages(t *testing.T) {
 	roomUsecase, _ := setupChatUsecases()
-	messages, err := roomUsecase.GetMessages(2, 0)
+	messages, err := roomUsecase.GetMessages(2, 0, 1)
 	if err != nil {
 		t.Error("portion msg err: ", err)
 	}
@@ -120,4 +121,29 @@ func TestGetRoomByID(t *testing.T) {
 		t.Error("get room by ID err: ", err)
 	}
 	fmt.Println(room)
+}
+
+func TestGetUnReadMessages(t *testing.T) {
+	roomUsecase, _ := setupChatUsecases()
+	unreadMsgNum, err := roomUsecase.GetUnReadMessages(1)
+	if err != nil {
+		t.Error("unread msg num err: ", err)
+	}
+	fmt.Println(unreadMsgNum)
+}
+
+func TestUpdateMessageStatus(t *testing.T) {
+	roomUsecase, _ := setupChatUsecases()
+	err := roomUsecase.UpdateMessageStatus(1, 1)
+	if err != nil {
+		t.Error("update message status err: ", err)
+	}
+}
+
+func TestUpdateMessagesStatusForReceiver(t *testing.T) {
+	roomUsecase, _ := setupChatUsecases()
+	err := roomUsecase.UpdateMessagesStatusForReceiver(1, 2)
+	if err != nil {
+		t.Error("update messages status err: ", err)
+	}
 }

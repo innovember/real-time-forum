@@ -23,14 +23,18 @@ var (
 	ErrPermissionDenied     = errors.New("permission denied")
 	ErrOnlyPOST             = errors.New("only POST method allowed")
 	ErrOnlyGet              = errors.New("only GET method allowed")
+	ErrOnlyDelete           = errors.New("only DELETE requests allowed")
+	ErrOnlyPUT              = errors.New("only PUT requests allowed")
 	ErrHashPassword         = errors.New("hash password error")
 	ErrCSRF                 = errors.New("invalid csrf token received")
 	ErrInvalidSessionToken  = errors.New("invalid session token received")
 	ErrSessionTokenNotFound = errors.New("invalid session token not found")
 	ErrNoData               = sql.ErrNoRows
+	ErrRoomNotExist         = errors.New("there is no room with such id")
+	ErrHubNotFound          = errors.New("hub not found")
+	ErrSelfChat             = errors.New("change useriD, you cant use your ID")
 	RegistrationSuccess     = "You have registered successfully"
 	ProfileSuccess          = "User's profile fetched successfully"
-	ErrOnlyDelete           = errors.New("only delete requests allowed")
 	LogoutSuccess           = "You have logged out"
 	AllUsers                = "list of all users"
 	AllOnlineUsers          = "list of all online users"
@@ -48,8 +52,8 @@ var (
 	AllChats                = "All chats fetched"
 	RoomMessages            = "Messages fetched by roomID"
 	Room                    = "Room ready for chat"
-	ErrRoomNotExist         = errors.New("there is no room with such id")
-	ErrHubNotFound          = errors.New("hub not found")
+	MessageStatusUpdated    = "Message Status updated"
+	MessagesStatusUpdated   = "Status of messages for receiver updated"
 )
 
 const (

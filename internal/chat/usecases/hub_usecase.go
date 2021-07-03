@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/innovember/real-time-forum/internal/chat"
 	"github.com/innovember/real-time-forum/internal/consts"
+	"github.com/innovember/real-time-forum/internal/helpers"
 	"github.com/innovember/real-time-forum/internal/models"
 )
 
@@ -72,7 +73,7 @@ func (hu *HubUsecase) NewClient(userID int64, hub *models.Hub, conn *websocket.C
 	}
 }
 
-func (hu *HubUsecase) ServeWS(w http.ResponseWriter, r *http.Request, hub *models.Hub, userID int64) {
+func (hu *HubUsecase) ServeWS(w http.ResponseWriter, r *http.Request, hub *models.Hub, roomID, userID int64) {
 	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -82,7 +83,7 @@ func (hu *HubUsecase) ServeWS(w http.ResponseWriter, r *http.Request, hub *model
 	client.Hub.Register <- client
 
 	go hu.WritePump(client)
-	go hu.ReadPump(client, userID)
+	go hu.ReadPump(client, roomID)
 }
 
 func (hu *HubUsecase) writeJSON(c *models.Client, data interface{}) error {
@@ -126,7 +127,7 @@ func (hu *HubUsecase) WritePump(c *models.Client) {
 	}()
 }
 
-func (hu *HubUsecase) ReadPump(c *models.Client, userID int64) {
+func (hu *HubUsecase) ReadPump(c *models.Client, roomID int64) {
 	go func() {
 		defer func() {
 			c.Hub.Unregister <- c
@@ -147,14 +148,24 @@ func (hu *HubUsecase) ReadPump(c *models.Client, userID int64) {
 				}
 				break
 			}
-			msg := &models.Message{}
-			json.Unmarshal(messageBytes, msg)
-			if err := hu.roomRepo.InsertMessage(msg); err != nil {
-				log.Println("cant save message ,error: ", err)
+			inputMsg := models.Message{}
+			json.Unmarshal(messageBytes, &inputMsg)
+			inputMsg.RoomID = roomID
+			user := &models.User{ID: c.UserID}
+			inputMsg.User = user
+			inputMsg.MessageDate = helpers.GetCurrentUnixTime()
+			outputMessage, err := hu.roomRepo.InsertMessage(&inputMsg)
+			if err != nil {
+				log.Println("insert message err ,error: ", err)
 				continue
 			}
-			hu.writeJSON(c, msg)
-			c.Hub.Broadcast <- msg
+			outputMessage.HTTPCode = 200
+			outputMessage.State = true
+			if outputMessage.User.ID == c.UserID {
+				outputMessage.IsYourMessage = true
+			}
+			hu.writeJSON(c, outputMessage)
+			c.Hub.Broadcast <- outputMessage
 		}
 	}()
 }

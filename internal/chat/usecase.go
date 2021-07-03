@@ -13,11 +13,14 @@ type RoomUsecase interface {
 	GetUsersByRoom(roomID int64) ([]models.User, error)
 	GetAllRoomsByUserID(userID int64) ([]models.Room, error)
 	DeleteRoom(id int64) error
-	CreateMessage(msg *models.Message) error
-	GetMessages(roomID int64, lastMessageID int64) ([]models.Message, error)
+	CreateMessage(msg *models.Message) (*models.Message, error)
+	GetMessages(roomID, lastMessageID, userID int64) ([]models.Message, error)
 	GetLastMessageDate(roomID int64) (int64, error)
 	GetAllUsers(userID int64) ([]*models.User, error)
 	GetRoomByID(roomID int64) (*models.Room, error)
+	GetUnReadMessages(roomID int64) (int64, error)
+	UpdateMessageStatus(roomID, messageID int64) error
+	UpdateMessagesStatusForReceiver(roomID, userID int64) error
 }
 
 type HubUsecase interface {
@@ -26,5 +29,5 @@ type HubUsecase interface {
 	DeleteHub(roomID int64)
 	Register(roomID int64, hub *models.Hub)
 	NewClient(userID int64, hub *models.Hub, conn *websocket.Conn, send chan *models.Message) *models.Client
-	ServeWS(w http.ResponseWriter, r *http.Request, hub *models.Hub, userID int64)
+	ServeWS(w http.ResponseWriter, r *http.Request, hub *models.Hub, roomID, userID int64)
 }
