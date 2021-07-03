@@ -150,7 +150,8 @@ func (hu *HubUsecase) ReadPump(c *models.Client) {
 			}
 			inputMsg := models.Message{}
 			json.Unmarshal(messageBytes, &inputMsg)
-			inputMsg.User.ID = c.UserID
+			user := &models.User{ID: c.UserID}
+			inputMsg.User = user
 			inputMsg.MessageDate = helpers.GetCurrentUnixTime()
 			outputMessage, err := hu.roomRepo.InsertMessage(&inputMsg)
 			if err != nil {
