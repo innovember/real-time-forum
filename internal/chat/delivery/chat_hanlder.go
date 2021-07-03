@@ -78,6 +78,10 @@ func (ch *ChatHandler) HandlerGetRoom(w http.ResponseWriter, r *http.Request) {
 			response.JSON(w, false, http.StatusBadRequest, err.Error(), nil)
 			return
 		}
+		if session.UserID == input.UserID {
+			response.JSON(w, false, http.StatusBadRequest, consts.ErrSelfChat.Error(), nil)
+			return
+		}
 		room, err = ch.roomUsecase.GetRoomByUsers(session.UserID, input.UserID)
 		if err != nil {
 			switch err {
@@ -91,8 +95,10 @@ func (ch *ChatHandler) HandlerGetRoom(w http.ResponseWriter, r *http.Request) {
 				response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
 				return
 			}
+			response.JSON(w, true, http.StatusCreated, consts.Room, room)
+			return
 		}
-		response.JSON(w, true, http.StatusCreated, consts.Room, room)
+		response.JSON(w, true, http.StatusOK, consts.Room, room)
 		return
 	default:
 		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyPOST.Error(), nil)
