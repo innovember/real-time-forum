@@ -2,8 +2,10 @@ package usecases
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -82,7 +84,7 @@ func (hu *HubUsecase) ServeWS(w http.ResponseWriter, r *http.Request, hub *model
 	client := hu.NewClient(userID, hub, wsConn, make(chan *models.Message))
 	client.Hub.Register <- client
 
-	go hu.WritePump(client)
+	go hu.WritePump(client, roomID)
 	go hu.ReadPump(client, roomID)
 }
 
@@ -93,7 +95,7 @@ func (hu *HubUsecase) writeJSON(c *models.Client, data interface{}) error {
 	return err
 }
 
-func (hu *HubUsecase) WritePump(c *models.Client) {
+func (hu *HubUsecase) WritePump(c *models.Client, roomID int64) {
 	go func() {
 		ticker := time.NewTicker(pingPeriod)
 
@@ -109,6 +111,8 @@ func (hu *HubUsecase) WritePump(c *models.Client) {
 					hu.writeJSON(c, &models.Message{
 						HTTPCode: websocket.CloseMessage,
 						State:    false,
+						RoomID:   roomID,
+						Content:  "WSconnection closed",
 					})
 					return
 				}
@@ -118,6 +122,8 @@ func (hu *HubUsecase) WritePump(c *models.Client) {
 				if err := hu.writeJSON(c, &models.Message{
 					HTTPCode: websocket.PingMessage,
 					State:    false,
+					RoomID:   roomID,
+					Content:  fmt.Sprintf("PingPeriod(%s) ended. PingMessage", pingPeriod),
 				}); err != nil {
 					return
 				}
@@ -131,6 +137,12 @@ func (hu *HubUsecase) ReadPump(c *models.Client, roomID int64) {
 	go func() {
 		defer func() {
 			c.Hub.Unregister <- c
+			hu.writeJSON(c, &models.Message{
+				HTTPCode: websocket.CloseMessage,
+				State:    false,
+				RoomID:   roomID,
+				Content:  fmt.Sprintf("PongWait(%s) ended. WSconn closed", pongWait),
+			})
 			c.Conn.Close()
 		}()
 
@@ -141,6 +153,7 @@ func (hu *HubUsecase) ReadPump(c *models.Client, roomID int64) {
 			return nil
 		})
 		for {
+			c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 			_, messageBytes, err := c.Conn.ReadMessage()
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
@@ -150,22 +163,23 @@ func (hu *HubUsecase) ReadPump(c *models.Client, roomID int64) {
 			}
 			inputMsg := models.Message{}
 			json.Unmarshal(messageBytes, &inputMsg)
-			inputMsg.RoomID = roomID
-			user := &models.User{ID: c.UserID}
-			inputMsg.User = user
-			inputMsg.MessageDate = helpers.GetCurrentUnixTime()
-			outputMessage, err := hu.roomRepo.InsertMessage(&inputMsg)
-			if err != nil {
-				log.Println("insert message err ,error: ", err)
-				continue
+			if inputMsg.Content != "" && strings.TrimSpace(inputMsg.Content) != "" {
+				inputMsg.RoomID = roomID
+				user := &models.User{ID: c.UserID}
+				inputMsg.User = user
+				inputMsg.MessageDate = helpers.GetCurrentUnixTime()
+				outputMessage, err := hu.roomRepo.InsertMessage(&inputMsg)
+				if err != nil {
+					log.Println("insert message err ,error: ", err)
+					continue
+				}
+				outputMessage.HTTPCode = 200
+				outputMessage.State = true
+				if outputMessage.User.ID == c.UserID {
+					outputMessage.IsYourMessage = true
+				}
+				c.Hub.Broadcast <- outputMessage
 			}
-			outputMessage.HTTPCode = 200
-			outputMessage.State = true
-			if outputMessage.User.ID == c.UserID {
-				outputMessage.IsYourMessage = true
-			}
-			hu.writeJSON(c, outputMessage)
-			c.Hub.Broadcast <- outputMessage
 		}
 	}()
 }
