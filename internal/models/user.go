@@ -11,5 +11,5 @@ type User struct {
 	Gender     string `json:"gender,omitempty"`
 	CreatedAt  int64  `json:"createdAt,omitempty"`
 	LastActive int64  `json:"lastActive,omitempty"`
-	Status     string `json:"status"`
+	Status     string `json:"status,omitempty"`
 }
