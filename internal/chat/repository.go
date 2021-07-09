@@ -9,7 +9,7 @@ type RoomRepository interface {
 	SelectAllUsers(userID int64) ([]*models.User, error)
 	DeleteRoom(id int64) error
 	InsertMessage(msg *models.Message) (*models.Message, error)
-	SelectMessages(roomID int64, lastMessageID int64) ([]models.Message, error)
+	SelectMessages(roomID, lastMessageID, userID int64) ([]models.Message, error)
 	SelectLastMessageDate(roomID int64) (int64, error)
 	SelectRoomByID(roomID int64) (*models.Room, error)
 	SelectUnReadMessages(roomID int64) (int64, error)
