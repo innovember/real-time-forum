@@ -126,14 +126,9 @@ func (ru *RoomUsecase) CreateMessage(msg *models.Message) (*models.Message, erro
 }
 
 func (ru *RoomUsecase) GetMessages(roomID, lastMessageID, userID int64) ([]models.Message, error) {
-	messages, err := ru.roomRepo.SelectMessages(roomID, lastMessageID)
+	messages, err := ru.roomRepo.SelectMessages(roomID, lastMessageID, userID)
 	if err != nil {
 		return nil, err
-	}
-	for _, message := range messages {
-		if message.User.ID == userID {
-			message.IsYourMessage = true
-		}
 	}
 	return messages, nil
 }

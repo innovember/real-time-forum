@@ -16,6 +16,6 @@ type Message struct {
 	Read          bool   `json:"read"`
 	User          *User  `json:"user"`
 	IsYourMessage bool   `json:"isYourMessage"`
-	HTTPCode      int    `json:"httpCode"`
-	State         bool   `json:"state"`
+	HTTPCode      int    `json:"httpCode,omitempty"`
+	State         bool   `json:"state,omitempty"`
 }

@@ -231,7 +231,7 @@ func (rr *RoomRepository) InsertMessage(msg *models.Message) (*models.Message, e
 	return msg, nil
 }
 
-func (rr *RoomRepository) SelectMessages(roomID int64, lastMessageID int64) ([]models.Message, error) {
+func (rr *RoomRepository) SelectMessages(roomID, lastMessageID, userID int64) ([]models.Message, error) {
 	var (
 		ctx      context.Context
 		tx       *sql.Tx
@@ -254,7 +254,8 @@ func (rr *RoomRepository) SelectMessages(roomID int64, lastMessageID int64) ([]m
 	if lastMessageID == 0 {
 		lastMessageID = total + 1
 	}
-	rows, err = tx.Query(`SELECT m.id, m.room_id, m.message, m.message_date,
+	rows, err = tx.Query(`SELECT m.id, m.room_id, m.message,
+							m.message_date, m.read,
 							u.id, u.nickname
 							FROM messages as m
 							LEFT JOIN users as u
@@ -277,6 +278,9 @@ func (rr *RoomRepository) SelectMessages(roomID int64, lastMessageID int64) ([]m
 		rows.Scan(&m.ID, &m.RoomID, &m.Content, &m.MessageDate,
 			&m.Read, &u.ID, &u.Nickname)
 		m.User = &u
+		if m.User.ID == userID {
+			m.IsYourMessage = true
+		}
 		messages = append(messages, m)
 	}
 	if err = rows.Err(); err != nil {

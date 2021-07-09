@@ -173,8 +173,6 @@ func (hu *HubUsecase) ReadPump(c *models.Client, roomID int64) {
 					log.Println("insert message err ,error: ", err)
 					continue
 				}
-				outputMessage.HTTPCode = 200
-				outputMessage.State = true
 				if outputMessage.User.ID == c.UserID {
 					outputMessage.IsYourMessage = true
 				}
