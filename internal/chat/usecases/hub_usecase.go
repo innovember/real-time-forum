@@ -28,13 +28,17 @@ const (
 	maxMessageSize = 256
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  4096,
-	WriteBufferSize: 4096,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
+var (
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  4096,
+		WriteBufferSize: 4096,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+	True  = true
+	False = false
+)
 
 func NewHubUsecase(hubRepo chat.HubRepository,
 	roomRepo chat.RoomRepository) *HubUsecase {
@@ -108,9 +112,9 @@ func (hu *HubUsecase) WritePump(c *models.Client, roomID int64) {
 			case message, ok := <-c.Send:
 				c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 				if !ok {
-					hu.writeJSON(c, &models.Message{
+					hu.writeJSON(c, &models.WsResponse{
 						HTTPCode: websocket.CloseMessage,
-						State:    false,
+						State:    &False,
 						RoomID:   roomID,
 						Content:  "WSconnection closed",
 					})
@@ -119,9 +123,9 @@ func (hu *HubUsecase) WritePump(c *models.Client, roomID int64) {
 				hu.writeJSON(c, message)
 			case <-ticker.C:
 				c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-				if err := hu.writeJSON(c, &models.Message{
+				if err := hu.writeJSON(c, &models.WsResponse{
 					HTTPCode: websocket.PingMessage,
-					State:    false,
+					State:    &False,
 					RoomID:   roomID,
 					Content:  fmt.Sprintf("PingPeriod(%s) ended. PingMessage", pingPeriod),
 				}); err != nil {
@@ -137,9 +141,9 @@ func (hu *HubUsecase) ReadPump(c *models.Client, roomID int64) {
 	go func() {
 		defer func() {
 			c.Hub.Unregister <- c
-			hu.writeJSON(c, &models.Message{
+			hu.writeJSON(c, &models.WsResponse{
 				HTTPCode: websocket.CloseMessage,
-				State:    false,
+				State:    &False,
 				RoomID:   roomID,
 				Content:  fmt.Sprintf("PongWait(%s) ended. WSconn closed", pongWait),
 			})
