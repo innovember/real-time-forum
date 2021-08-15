@@ -173,6 +173,9 @@ func (hu *HubUsecase) ReadPump(c *models.Client, roomID int64) {
 			case models.WsEventType.PongMessage:
 				c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 
+			case models.WsEventType.TypingInReceiver:
+				err = hu.SendTypingInResponse(c, roomID, &event)
+
 			default:
 				err = consts.ErrEventType
 			}
@@ -222,5 +225,26 @@ func (hu *HubUsecase) CreateMessage(c *models.Client, roomID int64, event *model
 		eventMsg.Message = outputMessage
 		c.Hub.Broadcast <- &eventMsg
 	}
+	return nil
+}
+
+func (hu *HubUsecase) SendTypingInResponse(c *models.Client, roomID int64, event *models.WsEvent) error {
+	users, err := hu.roomRepo.SelectUsersByRoom(roomID)
+	if err != nil {
+		return err
+	}
+	receiverID := helpers.SelectSecondUser(users, c.UserID)
+	if event.TypingInReceiverID == c.UserID {
+		return consts.ErrTypingInSameUser
+	}
+	if event.TypingInReceiverID != receiverID {
+		return consts.ErrTypingIn
+	}
+	eventMsg := models.WsEvent{
+		EventType:      models.WsEventType.TypingInSender,
+		RecipientID:    event.TypingInReceiverID,
+		TypingInUserID: c.UserID,
+	}
+	c.Hub.Broadcast <- &eventMsg
 	return nil
 }
