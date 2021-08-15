@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/innovember/real-time-forum/internal/chat"
+	"github.com/innovember/real-time-forum/internal/consts"
 	"github.com/innovember/real-time-forum/internal/models"
 )
 
@@ -150,6 +151,43 @@ func (rr *RoomRepository) SelectAllUsers(userID int64) ([]*models.User, error) {
 	 FROM users
 	  WHERE id != ?
 	  ORDER BY nickname ASC`, userID)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var u models.User
+		rows.Scan(&u.ID, &u.Nickname)
+		users = append(users, &u)
+	}
+	if err = rows.Err(); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (rr *RoomRepository) SelectOnlineUsers(userID int64) ([]*models.User, error) {
+	var (
+		ctx   context.Context
+		tx    *sql.Tx
+		err   error
+		rows  *sql.Rows
+		users []*models.User
+	)
+	ctx = context.Background()
+	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return nil, err
+	}
+	rows, err = tx.Query(`SELECT id, nickname
+	 FROM users
+	  WHERE id != ?
+	  AND status = ?
+	  ORDER BY nickname ASC`, userID, consts.StatusOnline)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
