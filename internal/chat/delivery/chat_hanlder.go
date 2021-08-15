@@ -34,7 +34,8 @@ func (ch *ChatHandler) Configure(mux *http.ServeMux, mm *mwares.MiddlewareManage
 	mux.HandleFunc("/api/v1/room", mm.CORSConfig(mm.CheckCSRF(mm.CheckAuth(ch.HandlerGetRoom))))
 	mux.HandleFunc("/api/v1/messages", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetMessages)))
 	mux.HandleFunc("/api/v1/message/", mm.CheckAuth(ch.HandlerWsSendMessage))
-	mux.HandleFunc("/api/v1/chats/users", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetUsers)))
+	mux.HandleFunc("/api/v1/chats/users/all", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetUsers)))
+	mux.HandleFunc("/api/v1/chats/users/online", mm.CORSConfig(mm.CheckAuth(ch.HandlerGetOnlineUsers)))
 	mux.HandleFunc("/api/v1/room/message", mm.CORSConfig(mm.CheckAuth(ch.HandlerUpdateMessageStatus)))
 	mux.HandleFunc("/api/v1/room/messages", mm.CORSConfig(mm.CheckAuth(ch.HandlerUpdateMessagesStatus)))
 }
@@ -181,6 +182,28 @@ func (ch *ChatHandler) HandlerGetUsers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		users, err := ch.roomUsecase.GetAllUsers(session.UserID)
+		if err != nil {
+			response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
+		response.JSON(w, true, http.StatusOK, consts.AllUsers, users)
+		return
+	default:
+		response.JSON(w, false, http.StatusMethodNotAllowed, consts.ErrOnlyGet.Error(), nil)
+		return
+	}
+}
+
+func (ch *ChatHandler) HandlerGetOnlineUsers(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		cookie, _ := r.Cookie(consts.SessionName)
+		session, err := ch.sessionUcase.GetByToken(cookie.Value)
+		if err != nil {
+			response.JSON(w, false, http.StatusUnauthorized, consts.ErrInvalidSessionToken.Error(), nil)
+			return
+		}
+		users, err := ch.roomUsecase.GetOnlineUsers(session.UserID)
 		if err != nil {
 			response.JSON(w, false, http.StatusInternalServerError, err.Error(), nil)
 			return

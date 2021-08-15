@@ -17,10 +17,3 @@ type Message struct {
 	User          *User  `json:"user"`
 	IsYourMessage bool   `json:"isYourMessage"`
 }
-
-type WsResponse struct {
-	RoomID   int64  `json:"roomID"`
-	Content  string `json:"content"`
-	HTTPCode int    `json:"httpCode,omitempty"`
-	State    *bool  `json:"state,omitempty"`
-}

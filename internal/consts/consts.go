@@ -33,6 +33,8 @@ var (
 	ErrRoomNotExist         = errors.New("there is no room with such id")
 	ErrHubNotFound          = errors.New("hub not found")
 	ErrSelfChat             = errors.New("change useriD, you cant use your ID")
+	ErrEventType            = errors.New("invalid event type")
+	ErrWsClosed             = errors.New("websocket conn closed")
 	RegistrationSuccess     = "You have registered successfully"
 	ProfileSuccess          = "User's profile fetched successfully"
 	LogoutSuccess           = "You have logged out"

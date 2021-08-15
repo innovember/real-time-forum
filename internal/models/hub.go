@@ -7,7 +7,7 @@ type Hub struct {
 	Clients map[*Client]bool
 
 	// Inbound messages from the clients.
-	Broadcast chan *Message
+	Broadcast chan *WsEvent
 
 	// Register requests from the clients.
 	Register chan *Client

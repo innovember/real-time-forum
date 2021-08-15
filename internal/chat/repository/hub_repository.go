@@ -17,7 +17,7 @@ func NewHubRepository(roomHubs *models.RoomHubs) chat.HubRepository {
 
 func (hr *HubRepository) NewHub() *models.Hub {
 	return &models.Hub{
-		Broadcast:  make(chan *models.Message),
+		Broadcast:  make(chan *models.WsEvent),
 		Register:   make(chan *models.Client),
 		Unregister: make(chan *models.Client),
 		Clients:    make(map[*models.Client]bool),
