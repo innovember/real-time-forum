@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -69,7 +68,7 @@ func (hu *HubUsecase) Register(roomID int64, hub *models.Hub) {
 	hu.hubRepo.Register(roomID, hub)
 }
 
-func (hu *HubUsecase) NewClient(userID int64, hub *models.Hub, conn *websocket.Conn, send chan *models.Message) *models.Client {
+func (hu *HubUsecase) NewClient(userID int64, hub *models.Hub, conn *websocket.Conn, send chan *models.WsEvent) *models.Client {
 	return &models.Client{
 		UserID: userID,
 		Hub:    hub,
@@ -85,7 +84,7 @@ func (hu *HubUsecase) ServeWS(w http.ResponseWriter, r *http.Request, hub *model
 		log.Println(err)
 		return
 	}
-	client := hu.NewClient(userID, hub, wsConn, make(chan *models.Message))
+	client := hu.NewClient(userID, hub, wsConn, make(chan *models.WsEvent))
 	client.Hub.Register <- client
 
 	go hu.WritePump(client, roomID)
@@ -94,9 +93,8 @@ func (hu *HubUsecase) ServeWS(w http.ResponseWriter, r *http.Request, hub *model
 
 func (hu *HubUsecase) writeJSON(c *models.Client, data interface{}) error {
 	c.Mu.Lock()
-	err := c.Conn.WriteJSON(data)
-	c.Mu.Unlock()
-	return err
+	defer c.Mu.Unlock()
+	return c.Conn.WriteJSON(data)
 }
 
 func (hu *HubUsecase) WritePump(c *models.Client, roomID int64) {
@@ -109,25 +107,25 @@ func (hu *HubUsecase) WritePump(c *models.Client, roomID int64) {
 		}()
 		for {
 			select {
-			case message, ok := <-c.Send:
+			case event, ok := <-c.Send:
 				c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 				if !ok {
-					hu.writeJSON(c, &models.WsResponse{
-						HTTPCode: websocket.CloseMessage,
-						State:    &False,
-						RoomID:   roomID,
-						Content:  "WSconnection closed",
+					hu.writeJSON(c, &models.WsEvent{
+						EventType:   models.WsEventType.WsClosed,
+						RecipientID: c.UserID,
+						RoomID:      roomID,
+						State:       false,
 					})
 					return
 				}
-				hu.writeJSON(c, message)
+				hu.writeJSON(c, event)
 			case <-ticker.C:
 				c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-				if err := hu.writeJSON(c, &models.WsResponse{
-					HTTPCode: websocket.PingMessage,
-					State:    &False,
-					RoomID:   roomID,
-					Content:  fmt.Sprintf("PingPeriod(%s) ended. PingMessage", pingPeriod),
+				if err := hu.writeJSON(c, &models.WsEvent{
+					EventType:   models.WsEventType.PingMessage,
+					RecipientID: c.UserID,
+					RoomID:      roomID,
+					State:       false,
 				}); err != nil {
 					return
 				}
@@ -141,11 +139,11 @@ func (hu *HubUsecase) ReadPump(c *models.Client, roomID int64) {
 	go func() {
 		defer func() {
 			c.Hub.Unregister <- c
-			hu.writeJSON(c, &models.WsResponse{
-				HTTPCode: websocket.CloseMessage,
-				State:    &False,
-				RoomID:   roomID,
-				Content:  fmt.Sprintf("PongWait(%s) ended. WSconn closed", pongWait),
+			hu.writeJSON(c, &models.WsEvent{
+				EventType:   models.WsEventType.WsClosed,
+				RecipientID: c.UserID,
+				RoomID:      roomID,
+				State:       false,
 			})
 			c.Conn.Close()
 		}()
@@ -157,31 +155,72 @@ func (hu *HubUsecase) ReadPump(c *models.Client, roomID int64) {
 			return nil
 		})
 		for {
-			c.Conn.SetReadDeadline(time.Now().Add(pongWait))
-			_, messageBytes, err := c.Conn.ReadMessage()
+			event, err := GetEvent(c)
 			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					log.Printf("error: %v", err)
-				}
-				break
+				hu.writeJSON(c, &models.WsEvent{
+					EventType:   models.WsEventType.WsError,
+					Content:     err.Error(),
+					RecipientID: c.UserID,
+					RoomID:      roomID,
+					State:       false,
+				})
+				return
 			}
-			inputMsg := models.Message{}
-			json.Unmarshal(messageBytes, &inputMsg)
-			if inputMsg.Content != "" && strings.TrimSpace(inputMsg.Content) != "" {
-				inputMsg.RoomID = roomID
-				user := &models.User{ID: c.UserID}
-				inputMsg.User = user
-				inputMsg.MessageDate = helpers.GetCurrentUnixTime()
-				outputMessage, err := hu.roomRepo.InsertMessage(&inputMsg)
-				if err != nil {
-					log.Println("insert message err ,error: ", err)
-					continue
-				}
-				if outputMessage.User.ID == c.UserID {
-					outputMessage.IsYourMessage = true
-				}
-				c.Hub.Broadcast <- outputMessage
+			switch event.EventType {
+			case models.WsEventType.Message:
+				err = hu.CreateMessage(c, roomID, &event)
+
+			case models.WsEventType.PongMessage:
+				c.Conn.SetReadDeadline(time.Now().Add(pongWait))
+
+			default:
+				err = consts.ErrEventType
+			}
+
+			if err != nil {
+				hu.writeJSON(c, &models.WsEvent{
+					EventType:   models.WsEventType.WsError,
+					Content:     err.Error(),
+					RecipientID: c.UserID,
+					RoomID:      roomID,
+					State:       false,
+				})
+				return
 			}
 		}
 	}()
+}
+
+func GetEvent(c *models.Client) (models.WsEvent, error) {
+	var event models.WsEvent
+	_, messageBytes, err := c.Conn.ReadMessage()
+	if err != nil {
+		if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+			log.Printf("ws error: %v", err)
+		}
+		return event, err
+	}
+	err = json.Unmarshal(messageBytes, &event)
+	if err != nil {
+		return event, err
+	}
+	return event, nil
+}
+
+func (hu *HubUsecase) CreateMessage(c *models.Client, roomID int64, event *models.WsEvent) error {
+	inputMsg := models.Message{Content: event.Content}
+	eventMsg := models.WsEvent{EventType: models.WsEventType.Message}
+	if inputMsg.Content != "" && strings.TrimSpace(inputMsg.Content) != "" {
+		inputMsg.RoomID = roomID
+		user := &models.User{ID: c.UserID}
+		inputMsg.User = user
+		inputMsg.MessageDate = helpers.GetCurrentUnixTime()
+		outputMessage, err := hu.roomRepo.InsertMessage(&inputMsg)
+		if err != nil {
+			return err
+		}
+		eventMsg.Message = outputMessage
+		c.Hub.Broadcast <- &eventMsg
+	}
+	return nil
 }
