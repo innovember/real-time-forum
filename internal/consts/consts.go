@@ -35,27 +35,30 @@ var (
 	ErrSelfChat             = errors.New("change useriD, you cant use your ID")
 	ErrEventType            = errors.New("invalid event type")
 	ErrWsClosed             = errors.New("websocket conn closed")
-	RegistrationSuccess     = "You have registered successfully"
-	ProfileSuccess          = "User's profile fetched successfully"
-	LogoutSuccess           = "You have logged out"
-	AllUsers                = "list of all users"
-	AllOnlineUsers          = "list of all online users"
-	StatusOnline            = "online"
-	StatusOffline           = "offline"
-	PostCreated             = "Your post has been created"
-	CommentCreated          = "Your comment has been created"
-	AllCategories           = "List of all categories"
-	UserData                = "User data fetched"
-	LoginSuccess            = "You have logged in"
-	PostByIDSuccess         = "Post data fetched"
-	ErrPostNotExist         = errors.New("there is no post with such id")
-	Posts                   = "Posts fetched"
-	Comments                = "Comments fetched"
-	AllChats                = "All chats fetched"
-	RoomMessages            = "Messages fetched by roomID"
-	Room                    = "Room ready for chat"
-	MessageStatusUpdated    = "Message Status updated"
-	MessagesStatusUpdated   = "Status of messages for receiver updated"
+	ErrTypingIn             = errors.New("given recipient not found in room")
+	ErrTypingInSameUser     = errors.New("given recipient can not send typing request to himself")
+
+	RegistrationSuccess   = "You have registered successfully"
+	ProfileSuccess        = "User's profile fetched successfully"
+	LogoutSuccess         = "You have logged out"
+	AllUsers              = "list of all users"
+	AllOnlineUsers        = "list of all online users"
+	StatusOnline          = "online"
+	StatusOffline         = "offline"
+	PostCreated           = "Your post has been created"
+	CommentCreated        = "Your comment has been created"
+	AllCategories         = "List of all categories"
+	UserData              = "User data fetched"
+	LoginSuccess          = "You have logged in"
+	PostByIDSuccess       = "Post data fetched"
+	ErrPostNotExist       = errors.New("there is no post with such id")
+	Posts                 = "Posts fetched"
+	Comments              = "Comments fetched"
+	AllChats              = "All chats fetched"
+	RoomMessages          = "Messages fetched by roomID"
+	Room                  = "Room ready for chat"
+	MessageStatusUpdated  = "Message Status updated"
+	MessagesStatusUpdated = "Status of messages for receiver updated"
 )
 
 const (
