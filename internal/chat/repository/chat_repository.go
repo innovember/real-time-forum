@@ -300,7 +300,7 @@ func (rr *RoomRepository) SelectMessages(roomID, lastMessageID, userID int64) ([
 							ON m.author_id = u.id
 							WHERE m.room_id = $1
 							AND m.id < $2
-							ORDER BY m.message_date DESC
+							ORDER BY m.id DESC
 							LIMIT 10
 						 `, roomID, lastMessageID)
 	if err != nil {
