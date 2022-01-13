@@ -46,7 +46,7 @@ func (ru *RoomUsecase) GetRoomByUsers(userID1, userID2 int64) (*models.Room, err
 		return nil, err
 	}
 	room.User = user
-	room.UnreadMsgNumber, err = ru.GetUnReadMessages(room.ID)
+	room.UnreadMsgNumber, err = ru.GetUnReadMessages(room.ID, userID2)
 	if err != nil && err != consts.ErrNoData {
 		return nil, err
 	}
@@ -96,7 +96,12 @@ func (ru *RoomUsecase) GetAllRoomsByUserID(userID int64) ([]models.Room, error) 
 		if err != nil && err != consts.ErrNoData {
 			return nil, err
 		}
-		room.UnreadMsgNumber, err = ru.GetUnReadMessages(room.ID)
+		users, err := ru.GetUsersByRoom(room.ID)
+		if err != nil {
+			return nil, err
+		}
+		authorID := helpers.SelectSecondUser(users, userID)
+		room.UnreadMsgNumber, err = ru.GetUnReadMessages(room.ID, authorID)
 		if err != nil && err != consts.ErrNoData {
 			return nil, err
 		}
@@ -169,8 +174,8 @@ func (ru *RoomUsecase) GetRoomByID(roomID int64) (*models.Room, error) {
 	return room, nil
 }
 
-func (ru *RoomUsecase) GetUnReadMessages(roomID int64) (int64, error) {
-	unreadMsgNumber, err := ru.roomRepo.SelectUnReadMessages(roomID)
+func (ru *RoomUsecase) GetUnReadMessages(roomID, authorID int64) (int64, error) {
+	unreadMsgNumber, err := ru.roomRepo.SelectUnReadMessages(roomID, authorID)
 	if err != nil {
 		return 0, err
 	}

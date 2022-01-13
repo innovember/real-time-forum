@@ -382,7 +382,7 @@ func (rr *RoomRepository) SelectRoomByID(roomID int64) (*models.Room, error) {
 	return &room, nil
 }
 
-func (rr *RoomRepository) SelectUnReadMessages(roomID int64) (int64, error) {
+func (rr *RoomRepository) SelectUnReadMessages(roomID, authorID int64) (int64, error) {
 	var (
 		ctx   context.Context
 		tx    *sql.Tx
@@ -396,8 +396,9 @@ func (rr *RoomRepository) SelectUnReadMessages(roomID int64) (int64, error) {
 	if err = tx.QueryRow(`SELECT count(id) AS total
 	 					FROM messages
 						 WHERE room_id = ?
+						 AND author_id = ?
 						 AND read = 0;
-						 `, roomID).Scan(
+						 `, roomID, authorID).Scan(
 		&total); err != nil {
 		tx.Rollback()
 		return 0, err
@@ -460,24 +461,29 @@ func (rr *RoomRepository) GetLastMessage(roomID int64) (*models.Message, error) 
 		tx          *sql.Tx
 		err         error
 		lastMessage models.Message
+		user        models.User
 	)
 	ctx = context.Background()
 	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
 		return nil, err
 	}
 	if err = tx.QueryRow(`SELECT m.id, m.room_id, m.message,
-							m.message_date, m.read
+							m.message_date, m.read,
+							u.id, u.nickname
 							FROM messages AS m
+							LEFT JOIN users as u
+							ON m.author_id = u.id
 							WHERE room_id = ?
 							ORDER BY m.id DESC , m.message_date DESC 
 							LIMIT 1
 						 `, roomID).Scan(
 		&lastMessage.ID, &lastMessage.RoomID,
 		&lastMessage.Content, &lastMessage.MessageDate,
-		&lastMessage.Read); err != nil {
+		&lastMessage.Read, &user.ID, &user.Nickname); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
+	lastMessage.User = &user
 	if err = tx.Commit(); err != nil {
 		return nil, err
 	}
