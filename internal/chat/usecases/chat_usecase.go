@@ -92,6 +92,10 @@ func (ru *RoomUsecase) GetAllRoomsByUserID(userID int64) ([]models.Room, error) 
 		if err != nil && err != consts.ErrNoData {
 			return nil, err
 		}
+		room.LastMessage, err = ru.roomRepo.GetLastMessage(room.ID)
+		if err != nil && err != consts.ErrNoData {
+			return nil, err
+		}
 		room.UnreadMsgNumber, err = ru.GetUnReadMessages(room.ID)
 		if err != nil && err != consts.ErrNoData {
 			return nil, err

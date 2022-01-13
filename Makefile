@@ -1,4 +1,9 @@
 include .env
+
+.PHONY: fmt
+fmt: ## Run go fmt for the whole project
+	test -z $$(for d in $$(go list -f {{.Dir}} ./...); do gofmt -e -l -w $$d/*.go; done)
+
 run:
 	go run ./cmd/api/main.go
 go-build:
