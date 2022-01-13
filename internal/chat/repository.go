@@ -13,7 +13,7 @@ type RoomRepository interface {
 	SelectMessages(roomID, lastMessageID, userID int64) ([]models.Message, error)
 	SelectLastMessageDate(roomID int64) (int64, error)
 	SelectRoomByID(roomID int64) (*models.Room, error)
-	SelectUnReadMessages(roomID int64) (int64, error)
+	SelectUnReadMessages(roomID, authorID int64) (int64, error)
 	UpdateMessageStatus(roomID, messageID int64) error
 	UpdateMessagesStatusForReceiver(roomID, userID int64) error
 	GetLastMessage(roomID int64) (*models.Message, error)
