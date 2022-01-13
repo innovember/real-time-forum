@@ -453,3 +453,33 @@ func (rr *RoomRepository) UpdateMessagesStatusForReceiver(roomID, userID int64) 
 	}
 	return nil
 }
+
+func (rr *RoomRepository) GetLastMessage(roomID int64) (*models.Message, error) {
+	var (
+		ctx         context.Context
+		tx          *sql.Tx
+		err         error
+		lastMessage models.Message
+	)
+	ctx = context.Background()
+	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
+		return nil, err
+	}
+	if err = tx.QueryRow(`SELECT m.id, m.room_id, m.message,
+							m.message_date, m.read
+							FROM messages AS m
+							WHERE room_id = ?
+							ORDER BY m.id DESC , m.message_date DESC 
+							LIMIT 1
+						 `, roomID).Scan(
+		&lastMessage.ID, &lastMessage.RoomID,
+		&lastMessage.Content, &lastMessage.MessageDate,
+		&lastMessage.Read); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+	return &lastMessage, nil
+}

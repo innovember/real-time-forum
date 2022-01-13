@@ -104,7 +104,7 @@ func (cr *CommentDBRepository) SelectCommentsByPostID(input *models.InputGetComm
 		LIMIT ?
 		`,
 		input.LastCommentID,
-                input.PostID,
+		input.PostID,
 		input.Limit); err != nil {
 		tx.Rollback()
 		return nil, err

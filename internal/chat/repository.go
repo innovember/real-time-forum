@@ -16,6 +16,7 @@ type RoomRepository interface {
 	SelectUnReadMessages(roomID int64) (int64, error)
 	UpdateMessageStatus(roomID, messageID int64) error
 	UpdateMessagesStatusForReceiver(roomID, userID int64) error
+	GetLastMessage(roomID int64) (*models.Message, error)
 }
 
 type HubRepository interface {

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
+
 	"github.com/innovember/real-time-forum/internal/models"
 )
 
