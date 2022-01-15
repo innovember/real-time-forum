@@ -147,7 +147,7 @@ func (rr *RoomRepository) SelectAllUsers(userID int64) ([]*models.User, error) {
 	if tx, err = rr.dbConn.BeginTx(ctx, &sql.TxOptions{}); err != nil {
 		return nil, err
 	}
-	rows, err = tx.Query(`SELECT id, nickname
+	rows, err = tx.Query(`SELECT id, nickname, status
 	 FROM users
 	  WHERE id != ?
 	  ORDER BY nickname ASC`, userID)
@@ -158,7 +158,7 @@ func (rr *RoomRepository) SelectAllUsers(userID int64) ([]*models.User, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var u models.User
-		rows.Scan(&u.ID, &u.Nickname)
+		rows.Scan(&u.ID, &u.Nickname, &u.Status)
 		users = append(users, &u)
 	}
 	if err = rows.Err(); err != nil {
