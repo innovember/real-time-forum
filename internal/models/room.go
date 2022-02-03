@@ -11,7 +11,7 @@ type Room struct {
 
 type Message struct {
 	ID            int64  `json:"id"`
-	RoomID        int64  `json:"roomID"`
+	RoomID        int64  `json:"roomId"`
 	Content       string `json:"content"`
 	MessageDate   int64  `json:"messageDate"`
 	Read          bool   `json:"read"`
