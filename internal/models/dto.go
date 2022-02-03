@@ -32,7 +32,7 @@ type InputGetComments struct {
 	UserID        int64  `json:"userId"`
 	Offset        int    `json:"offset"`
 	Limit         int    `json:"limit"`
-	LastCommentID int    `json:"lastCommentID"`
+	LastCommentID int    `json:"lastCommentId"`
 }
 
 type InputGetPosts struct {
@@ -41,12 +41,12 @@ type InputGetPosts struct {
 	Categories []string `json:"categories"`
 	Offset     int      `json:"offset"`
 	Limit      int      `json:"limit"`
-	LastPostID int      `json:"lastPostID"`
+	LastPostID int      `json:"lastPostId"`
 }
 
 type InputRoom struct {
 	RoomID        int64 `json:"roomId"`
 	UserID        int64 `json:"userId"`
 	MessageID     int64 `json:"messageId"`
-	LastMessageID int64 `json:"lastMessageID"`
+	LastMessageID int64 `json:"lastMessageId"`
 }
