@@ -9,7 +9,7 @@ import (
 
 type Session struct {
 	Name      string    `json:"name"`
-	UserID    int64     `json:"userID"`
+	UserID    int64     `json:"userId"`
 	Token     string    `json:"token"`
 	Expires   time.Time `json:"expires"`
 	ExpiresAt int64     `json:"expiresAt"`

@@ -22,31 +22,31 @@ type InputPost struct {
 }
 
 type InputComment struct {
-	PostID  int64  `json:"postID"`
+	PostID  int64  `json:"postId"`
 	Content string `json:"content"`
 }
 
 type InputGetComments struct {
 	Option        string `json:"option"` // user or post
-	PostID        int64  `json:"post_id"`
-	UserID        int64  `json:"user_id"`
+	PostID        int64  `json:"postId"`
+	UserID        int64  `json:"userId"`
 	Offset        int    `json:"offset"`
 	Limit         int    `json:"limit"`
-	LastCommentID int    `json:"lastCommentID"`
+	LastCommentID int    `json:"lastCommentId"`
 }
 
 type InputGetPosts struct {
 	Option     string   `json:"option"` // all, categories or author
-	AuthorID   int64    `json:"authorID"`
+	AuthorID   int64    `json:"authorId"`
 	Categories []string `json:"categories"`
 	Offset     int      `json:"offset"`
 	Limit      int      `json:"limit"`
-	LastPostID int      `json:"lastPostID"`
+	LastPostID int      `json:"lastPostId"`
 }
 
 type InputRoom struct {
-	RoomID        int64 `json:"roomID"`
-	UserID        int64 `json:"userID"`
-	MessageID     int64 `json:"messageID"`
-	LastMessageID int64 `json:"lastMessageID"`
+	RoomID        int64 `json:"roomId"`
+	UserID        int64 `json:"userId"`
+	MessageID     int64 `json:"messageId"`
+	LastMessageID int64 `json:"lastMessageId"`
 }
